@@ -256,10 +256,11 @@ void UDAI_PerfMngrComponent::SwapToProxy()
                 }
                 else
                 {
-                    int32 AddedIndex = ProxyMgr->AddInstanceImmediate(ProxyTag, Owner->GetActorTransform());
+                    ProxyMgr->SetBatchSizeForTag(ProxyTag, ProxyBatchAddSize);
+                    ProxyMgr->QueueInstanceForBatch(ProxyTag, Owner->GetActorTransform());
                     ProxyHISMTransform = Owner->GetActorTransform();
                     ProxyHISMTag = ProxyTag;
-                    bHasHISMInstance = AddedIndex != INDEX_NONE;
+                    bHasHISMInstance = true;
                 }
             }
             else
@@ -960,10 +961,11 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime, float Sig
                         UHierarchicalInstancedStaticMeshComponent* HISM = ProxyMgr->GetOrCreateHISMForTag(BillboardTag, ProxyBillboardMesh, GetOwner());
                         if (HISM)
                         {
-                            int32 AddedIndex = ProxyMgr->AddInstanceImmediate(BillboardTag, GetOwner()->GetActorTransform());
+                            ProxyMgr->SetBatchSizeForTag(BillboardTag, ProxyBatchAddSize);
+                            ProxyMgr->QueueInstanceForBatch(BillboardTag, GetOwner()->GetActorTransform());
                             ProxyHISMTag = BillboardTag;
                             ProxyHISMTransform = GetOwner()->GetActorTransform();
-                            bHasHISMInstance = AddedIndex != INDEX_NONE;
+                            bHasHISMInstance = true;
                         }
                     }
                 }
@@ -1125,10 +1127,11 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime, float Sig
                         UHierarchicalInstancedStaticMeshComponent* HISM = ProxyMgr->GetOrCreateHISMForTag(ProxyTag, ProxyStaticMesh, GetOwner());
                         if (HISM)
                         {
-                            int32 AddedIndex = ProxyMgr->AddInstanceImmediate(ProxyTag, GetOwner()->GetActorTransform());
+                            ProxyMgr->SetBatchSizeForTag(ProxyTag, ProxyBatchAddSize);
+                            ProxyMgr->QueueInstanceForBatch(ProxyTag, GetOwner()->GetActorTransform());
                             ProxyHISMTag = ProxyTag;
                             ProxyHISMTransform = GetOwner()->GetActorTransform();
-                            bHasHISMInstance = AddedIndex != INDEX_NONE;
+                            bHasHISMInstance = true;
                         }
                     }
                 }
