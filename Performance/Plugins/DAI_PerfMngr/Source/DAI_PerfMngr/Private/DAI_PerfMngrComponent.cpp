@@ -248,7 +248,9 @@ void UDAI_PerfMngrComponent::SwapToProxy()
         {
             if (UDAI_ProxyHISMManager* ProxyMgr = World->GetSubsystem<UDAI_ProxyHISMManager>())
             {
-                FName ProxyTag = FName(*FString::Printf(TEXT("Proxy_%s_%s"), *Owner->GetName(), *ProxyStaticMesh->GetName()));
+                // Use only the mesh name for the tag so actors sharing the same
+                // proxy mesh batch into a single HISM component.
+                FName ProxyTag = FName(*FString::Printf(TEXT("Proxy_%s"), *ProxyStaticMesh->GetName()));
                 UE_LOG(LogTemp, Warning, TEXT("SwapToProxy: Owner: %s Mesh: %s"), *Owner->GetName(), *ProxyStaticMesh->GetName());
                 UHierarchicalInstancedStaticMeshComponent* HISM = ProxyMgr->GetOrCreateHISMForTag(ProxyTag, ProxyStaticMesh, Owner);
                 if (!HISM)
@@ -959,7 +961,8 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime, float Sig
                 {
                     if (UDAI_ProxyHISMManager* ProxyMgr = GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>())
                     {
-                        FName BillboardTag = FName(*FString::Printf(TEXT("Billboard_%s_%s"), *GetOwner()->GetName(), *ProxyBillboardMesh->GetName()));
+                        // Batch billboard proxies by mesh so many actors share one HISM.
+                        FName BillboardTag = FName(*FString::Printf(TEXT("Billboard_%s"), *ProxyBillboardMesh->GetName()));
                         UHierarchicalInstancedStaticMeshComponent* HISM = ProxyMgr->GetOrCreateHISMForTag(BillboardTag, ProxyBillboardMesh, GetOwner());
                         if (HISM)
                         {
@@ -1125,7 +1128,8 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime, float Sig
                 {
                     if (UDAI_ProxyHISMManager* ProxyMgr = GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>())
                     {
-                        FName ProxyTag = FName(*FString::Printf(TEXT("Proxy_%s_%s"), *GetOwner()->GetName(), *ProxyStaticMesh->GetName()));
+                        // Tag proxies solely by mesh name so actors reuse the same HISM.
+                        FName ProxyTag = FName(*FString::Printf(TEXT("Proxy_%s"), *ProxyStaticMesh->GetName()));
                         UHierarchicalInstancedStaticMeshComponent* HISM = ProxyMgr->GetOrCreateHISMForTag(ProxyTag, ProxyStaticMesh, GetOwner());
                         if (HISM)
                         {
