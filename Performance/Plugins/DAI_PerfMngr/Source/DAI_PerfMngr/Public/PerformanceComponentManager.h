@@ -19,7 +19,7 @@ class USkyLightComponent;
 class UCameraComponent;
 class USpringArmComponent;
 class UInputComponent;
-class UPawnSensingComponent;
+class UAIPerceptionComponent;   
 class UBoxComponent;
 class USphereComponent;
 class UCapsuleComponent;
@@ -48,7 +48,7 @@ enum class EManagedComponentType : uint8
     Camera,
     SpringArm,
     Input,
-    PawnSensing,
+    AIPerception,  
     BoxCollision,
     SphereCollision,
     CapsuleCollision,
@@ -61,7 +61,7 @@ enum class EManagedComponentType : uint8
     Arrow
 };
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class DAI_PERFMNGR_API UPerformanceComponentManager : public UActorComponent
 {
     GENERATED_BODY()
@@ -69,7 +69,7 @@ class DAI_PERFMNGR_API UPerformanceComponentManager : public UActorComponent
 public:
     UPerformanceComponentManager(const FObjectInitializer& ObjectInitializer);
 
-    UFUNCTION(BlueprintCallable, Category="Performance")
+    UFUNCTION(BlueprintCallable, Category = "Performance")
     void SetComponentActive(AActor* Target, EManagedComponentType Type, bool bActive);
 
 protected:
@@ -83,4 +83,3 @@ protected:
 
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 };
-

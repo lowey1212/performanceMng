@@ -1,4 +1,4 @@
-#include "PerformanceComponentManager.h"
+﻿#include "PerformanceComponentManager.h"
 
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/Actor.h"
@@ -16,14 +16,14 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/InputComponent.h"
-#include "Perception/PawnSensingComponent.h"
+#include "Perception/AIPerceptionComponent.h" 
 #include "Components/BoxComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Components/AudioComponent.h"
-#include "Sound/SynthComponent.h"
+#include "Components/SynthComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Components/BillboardComponent.h"
 #include "Components/ArrowComponent.h"
@@ -119,8 +119,8 @@ void UPerformanceComponentManager::InternalSetComponentActive(AActor* Target, EM
     case EManagedComponentType::Input:
         Comp = Target->InputComponent;
         break;
-    case EManagedComponentType::PawnSensing:
-        Comp = Target->FindComponentByClass<UPawnSensingComponent>();
+    case EManagedComponentType::PawnSensing:  
+        Comp = Target->FindComponentByClass<UAIPerceptionComponent>();
         break;
     case EManagedComponentType::BoxCollision:
         Comp = Target->FindComponentByClass<UBoxComponent>();
@@ -174,4 +174,3 @@ void UPerformanceComponentManager::InternalSetComponentActive(AActor* Target, EM
 #endif
     }
 }
-
