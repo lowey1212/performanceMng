@@ -11,6 +11,7 @@ public class DAI_PerfMngr : ModuleRules
             "Core",
             "CoreUObject",
             "Engine",
+            "NetCore",
             "GameplayAbilities",
             "GameplayTags",
             "GameplayTasks",
@@ -25,5 +26,10 @@ public class DAI_PerfMngr : ModuleRules
             Path.Combine(EngineDirectory, "Plugins/Runtime/SignificanceManager/Source/SignificanceManager/Public"),
             Path.Combine(EngineDirectory, "Plugins/Runtime/GameplayAbilities/Source/GameplayAbilities/Public")
         });
+
+        if (Target.bUseIris)
+        {
+            PublicDependencyModuleNames.Add("IrisCore");
+        }
     }
 }
