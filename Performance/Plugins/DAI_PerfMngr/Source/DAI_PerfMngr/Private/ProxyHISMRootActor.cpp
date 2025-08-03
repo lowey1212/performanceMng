@@ -1,8 +1,18 @@
 // This actor exists only as a parent/holder for Hierarchical Instanced Static Mesh (HISM) components.
 // Those components let us render many copies of the same mesh very efficiently.
-// No extra code is needed here—the behavior lives in the manager.
 #include "ProxyHISMRootActor.h"
+#include "Components/SceneComponent.h"
 
-// This file just includes the header for the ProxyHISMRootActor.
-// All logic (if any) is handled in the header or elsewhere.
-// No extra code is required here unless you want to add custom C++ behavior to the actor.
+// Provide an explicit root scene component so spawned HISMs have a stable parent in the world
+// outliner. Without this, the first registered HISM would become the actor's root, making it
+// harder to organize additional components.
+AProxyHISMRootActor::AProxyHISMRootActor()
+{
+    PrimaryActorTick.bCanEverTick = false;
+
+    // Create a simple root scene component to attach HISM children to
+    USceneComponent* SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("ProxyHISMRoot"));
+    SceneRoot->SetMobility(EComponentMobility::Static);
+    RootComponent = SceneRoot;
+}
+
