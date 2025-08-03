@@ -1,0 +1,19 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "f:\\githubdesktop\\performancemng\\performance\\intermediate\\build\\win64\\unrealeditor\\inc\\performance\\uht\\performancegamemode.gen.cpp",
+        "ProvidedModule": "",
+        "PCH": "f:\\githubdesktop\\performancemng\\performance\\intermediate\\build\\win64\\x64\\performanceeditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "f:\\githubdesktop\\performancemng\\performance\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\performance\\definitions.performance.h",
+            "f:\\githubdesktop\\performancemng\\performance\\source\\performance\\performancegamemode.h",
+            "f:\\ue_5_versions\\ue_5.5\\engine\\source\\runtime\\engine\\classes\\gameframework\\gamemodebase.h",
+            "f:\\ue_5_versions\\ue_5.5\\engine\\source\\runtime\\engine\\classes\\engine\\serverstatreplicator.h",
+            "f:\\ue_5_versions\\ue_5.5\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\serverstatreplicator.generated.h",
+            "f:\\ue_5_versions\\ue_5.5\\engine\\intermediate\\build\\win64\\unrealeditor\\inc\\engine\\uht\\gamemodebase.generated.h",
+            "f:\\githubdesktop\\performancemng\\performance\\intermediate\\build\\win64\\unrealeditor\\inc\\performance\\uht\\performancegamemode.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

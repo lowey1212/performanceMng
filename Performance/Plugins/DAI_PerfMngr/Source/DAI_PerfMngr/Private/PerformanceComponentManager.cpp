@@ -119,7 +119,7 @@ void UPerformanceComponentManager::InternalSetComponentActive(AActor* Target, EM
     case EManagedComponentType::Input:
         Comp = Target->InputComponent;
         break;
-    case EManagedComponentType::PawnSensing:  
+    case EManagedComponentType::AIPerception:
         Comp = Target->FindComponentByClass<UAIPerceptionComponent>();
         break;
     case EManagedComponentType::BoxCollision:
