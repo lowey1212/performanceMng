@@ -73,46 +73,48 @@ void APerformanceCharacter::NotifyControllerChanged()
 
 void APerformanceCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
-		
-		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+        Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-		// Moving
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APerformanceCharacter::Move);
+        // Set up action bindings
+        if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
+        {
+                // Jumping
+                EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+                EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
-		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APerformanceCharacter::Look);
-	}
-	else
-	{
-		UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
-	}
+                // Moving
+                EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APerformanceCharacter::Move);
+
+                // Looking
+                EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APerformanceCharacter::Look);
+        }
+        else
+        {
+                UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
+                return;
+        }
 }
 
 void APerformanceCharacter::Move(const FInputActionValue& Value)
 {
-	// input is a Vector2D
-	FVector2D MovementVector = Value.Get<FVector2D>();
+        // input is a Vector2D
+        const FVector2D MovementVector = Value.Get<FVector2D>();
 
-	if (Controller != nullptr)
-	{
-		// find out which way is forward
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
+        if (Controller != nullptr)
+        {
+                // find out which way is forward
+                const FRotator Rotation = Controller->GetControlRotation();
+                const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-	
-		// get right vector 
-		const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+                // build rotation matrix once and derive direction vectors
+                const FRotationMatrix RotationMatrix(YawRotation);
+                const FVector ForwardDirection = RotationMatrix.GetUnitAxis(EAxis::X);
+                const FVector RightDirection = RotationMatrix.GetUnitAxis(EAxis::Y);
 
-		// add movement 
-		AddMovementInput(ForwardDirection, MovementVector.Y);
-		AddMovementInput(RightDirection, MovementVector.X);
-	}
+                // add movement
+                AddMovementInput(ForwardDirection, MovementVector.Y);
+                AddMovementInput(RightDirection, MovementVector.X);
+        }
 }
 
 void APerformanceCharacter::Look(const FInputActionValue& Value)
