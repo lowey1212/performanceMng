@@ -1218,8 +1218,8 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime, float Sig
         }
         break;
     }
-    EnsureSingleRepresentation();
 }
+    EnsureSingleRepresentation();
 }
 
 
