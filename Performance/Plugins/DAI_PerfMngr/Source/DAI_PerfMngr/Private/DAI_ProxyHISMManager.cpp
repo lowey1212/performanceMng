@@ -139,9 +139,14 @@ UHierarchicalInstancedStaticMeshComponent* UDAI_ProxyHISMManager::GetOrCreateHIS
 
     // Create and register a new HISM component, attach to the root
     UHierarchicalInstancedStaticMeshComponent* HISM = NewObject<UHierarchicalInstancedStaticMeshComponent>(RootActor);
+    if (!HISM)
+        return nullptr;
+
+    // Attach the HISM to the dedicated root component so multiple HISMs share the same parent
+    HISM->SetupAttachment(RootActor->GetRootComponent());
     RootActor->AddInstanceComponent(HISM);
-    HISM->RegisterComponent();
     HISM->SetStaticMesh(Mesh);
+    HISM->RegisterComponent();
     HISM->ComponentTags.Add(Tag);
     TagToHISM.Add(Tag, HISM);
 

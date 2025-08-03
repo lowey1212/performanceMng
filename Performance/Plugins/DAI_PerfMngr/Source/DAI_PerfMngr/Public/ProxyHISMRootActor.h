@@ -13,7 +13,7 @@ class DAI_PERFMNGR_API AProxyHISMRootActor : public AActor
 {
     GENERATED_BODY()
 public:
-    AProxyHISMRootActor() { PrimaryActorTick.bCanEverTick = false; }
+    AProxyHISMRootActor();
 };
 
 /**
