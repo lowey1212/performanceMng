@@ -256,10 +256,12 @@ void UDAI_PerfMngrComponent::SwapToProxy()
                 }
                 else
                 {
-                    int32 AddedIndex = ProxyMgr->AddInstanceImmediate(ProxyTag, Owner->GetActorTransform());
+                    // Queue the instance so it is added over time rather than immediately
+                    ProxyMgr->SetBatchSizeForTag(ProxyTag, ProxyBatchAddSize);
+                    ProxyMgr->QueueInstanceForBatch(ProxyTag, Owner->GetActorTransform());
                     ProxyHISMTransform = Owner->GetActorTransform();
                     ProxyHISMTag = ProxyTag;
-                    bHasHISMInstance = AddedIndex != INDEX_NONE;
+                    bHasHISMInstance = true;
                 }
             }
             else
