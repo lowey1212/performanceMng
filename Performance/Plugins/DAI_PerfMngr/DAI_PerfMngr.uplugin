@@ -21,9 +21,9 @@
       "Name": "GameplayAbilities",
       "Enabled": true
     },
-     {
+    {
         "Name": "HairStrands",
         "Enabled": true
-     },
+     }
   ]
 }
