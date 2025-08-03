@@ -67,7 +67,7 @@ class DAI_PERFMNGR_API UPerformanceComponentManager : public UActorComponent
     GENERATED_BODY()
 
 public:
-    UPerformanceComponentManager();
+    UPerformanceComponentManager(const FObjectInitializer& ObjectInitializer);
 
     UFUNCTION(BlueprintCallable, Category="Performance")
     void SetComponentActive(AActor* Target, EManagedComponentType Type, bool bActive);
