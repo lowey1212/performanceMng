@@ -32,9 +32,9 @@
 #include "Iris/ReplicationSystem/ReplicationSystem.h"
 #endif
 
-UPerformanceComponentManager::UPerformanceComponentManager()
+UPerformanceComponentManager::UPerformanceComponentManager(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
 {
-    bReplicates = true;
     SetIsReplicatedByDefault(true);
 }
 
