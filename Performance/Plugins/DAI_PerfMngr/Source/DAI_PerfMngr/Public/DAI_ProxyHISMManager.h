@@ -24,6 +24,12 @@ public:
     /** Remove a single instance at a given transform from the HISM mapped by Tag. */
     void RemoveInstanceAtTransform(FName Tag, const FTransform& Transform);
 
+    /** Remove a single instance by index from the HISM mapped by Tag. */
+    void RemoveInstanceByIndex(FName Tag, int32 Index);
+
+    /** Immediately add an instance and return its index for tracking. */
+    int32 AddInstanceImmediate(FName Tag, const FTransform& Transform);
+
     /** Print a list of all HISM components and their instance counts to the log. */
     UFUNCTION(BlueprintCallable, Category = "Debug", meta = (ToolTip = "Logs all proxy HISM components and their instance counts."))
     void PrintAllHISMDebugInfo();
