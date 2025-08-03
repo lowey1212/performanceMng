@@ -1,0 +1,16 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\source\\dai_perfmngr\\private\\significanceutility.cpp",
+        "ProvidedModule": "",
+        "PCH": "f:\\plugintest\\performance\\intermediate\\build\\win64\\x64\\performanceeditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\dai_perfmngr\\definitions.dai_perfmngr.h",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\source\\dai_perfmngr\\public\\significanceutility.h",
+            "f:\\ue_5_versions\\ue_5.5\\engine\\plugins\\runtime\\significancemanager\\source\\significancemanager\\public\\significancemanager.h",
+            "f:\\ue_5_versions\\ue_5.5\\engine\\plugins\\runtime\\significancemanager\\intermediate\\build\\win64\\unrealeditor\\inc\\significancemanager\\uht\\significancemanager.generated.h"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}

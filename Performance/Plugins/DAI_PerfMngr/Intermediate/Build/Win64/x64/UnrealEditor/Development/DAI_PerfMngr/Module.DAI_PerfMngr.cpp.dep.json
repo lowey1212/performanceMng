@@ -1,0 +1,31 @@
+{
+    "Version": "1.2",
+    "Data": {
+        "Source": "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\dai_perfmngr\\module.dai_perfmngr.cpp",
+        "ProvidedModule": "",
+        "PCH": "f:\\plugintest\\performance\\intermediate\\build\\win64\\x64\\performanceeditor\\development\\unrealed\\sharedpch.unrealed.project.valapi.cpp20.h.pch",
+        "Includes": [
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\dai_perfmngr\\definitions.dai_perfmngr.h",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\unrealeditor\\inc\\dai_perfmngr\\uht\\dai_perfmngr.init.gen.cpp",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\unrealeditor\\inc\\dai_perfmngr\\uht\\dai_perfmngrcomponent.gen.cpp",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\source\\dai_perfmngr\\public\\dai_perfmngrcomponent.h",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\unrealeditor\\inc\\dai_perfmngr\\uht\\dai_perfmngrcomponent.generated.h",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\unrealeditor\\inc\\dai_perfmngr\\uht\\dai_perfmngrworldsubsystem.gen.cpp",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\source\\dai_perfmngr\\public\\dai_perfmngrworldsubsystem.h",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\unrealeditor\\inc\\dai_perfmngr\\uht\\dai_perfmngrworldsubsystem.generated.h",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\unrealeditor\\inc\\dai_perfmngr\\uht\\dai_proxyhismmanager.gen.cpp",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\source\\dai_perfmngr\\public\\dai_proxyhismmanager.h",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\unrealeditor\\inc\\dai_perfmngr\\uht\\dai_proxyhismmanager.generated.h",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\unrealeditor\\inc\\dai_perfmngr\\uht\\proxyhismrootactor.gen.cpp",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\source\\dai_perfmngr\\public\\proxyhismrootactor.h",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\unrealeditor\\inc\\dai_perfmngr\\uht\\proxyhismrootactor.generated.h",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\unrealeditor\\inc\\dai_perfmngr\\uht\\significancemanagerlibrary.gen.cpp",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\source\\dai_perfmngr\\public\\significancemanagerlibrary.h",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\unrealeditor\\inc\\dai_perfmngr\\uht\\significancemanagerlibrary.generated.h",
+            "f:\\plugintest\\performance\\plugins\\dai_perfmngr\\dai_perfmngr\\intermediate\\build\\win64\\x64\\unrealeditor\\development\\dai_perfmngr\\permoduleinline.gen.cpp",
+            "f:\\ue_5_versions\\ue_5.5\\engine\\source\\runtime\\core\\public\\hal\\permoduleinline.inl"
+        ],
+        "ImportedModules": [],
+        "ImportedHeaderUnits": []
+    }
+}
