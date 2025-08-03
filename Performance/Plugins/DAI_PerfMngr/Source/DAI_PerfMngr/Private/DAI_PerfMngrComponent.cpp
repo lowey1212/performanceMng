@@ -380,6 +380,12 @@ void UDAI_PerfMngrComponent::SwapToFull()
 // Uses thresholds and delays to avoid rapid flickering between states.
 void UDAI_PerfMngrComponent::HandleProxySwap(float DeltaTime, float Significance)
 {
+    if (!ProxyStaticMesh)
+    {
+        ProxyState = EProxySwapState::Active;
+        return;
+    }
+
     ProxyTimeInCurrentState += DeltaTime;
 
     switch (ProxyState)
@@ -472,17 +478,28 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance()
         ApplyColorBySignificance(Significance);
     }
 
-    HandleProxySwap(GetWorld()->GetDeltaSeconds(), Significance);
-
-    // Re-check after full: force proxy if still under threshold
-    if (ProxyState == EProxySwapState::Active && Significance < ProxyEnterThreshold)
+    if (ProxyStaticMesh)
     {
-        UE_LOG(LogTemp, Warning, TEXT("[PerfMngr] Forcing proxy re-entry after full, sig=%.2f"), Significance);
-        ProxyState = EProxySwapState::PendingSwapToProxy;
-        ProxyTimeInCurrentState = 0.0f;
+        HandleProxySwap(GetWorld()->GetDeltaSeconds(), Significance);
+
+        // Re-check after full: force proxy if still under threshold
+        if (ProxyState == EProxySwapState::Active && Significance < ProxyEnterThreshold)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[PerfMngr] Forcing proxy re-entry after full, sig=%.2f"), Significance);
+            ProxyState = EProxySwapState::PendingSwapToProxy;
+            ProxyTimeInCurrentState = 0.0f;
+        }
+
+        if (ProxyBillboardMesh)
+        {
+            HandleBillboardProxySwap(GetWorld()->GetDeltaSeconds(), Significance);
+        }
     }
-    HandleBillboardProxySwap(GetWorld()->GetDeltaSeconds(), Significance);
-    HandleParticleProxySwap(GetWorld()->GetDeltaSeconds(), Significance);
+
+    if (ProxyParticleEffect)
+    {
+        HandleParticleProxySwap(GetWorld()->GetDeltaSeconds(), Significance);
+    }
 
     if (bAllowAIThrottling)
     {
@@ -536,150 +553,152 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance()
     {
         CachedASC->SetComponentTickInterval(TickRate);
     }
-    TArray<UActorComponent*> AllComponents;
-    Owner->GetComponents(AllComponents);
 
-    for (UActorComponent* Comp : AllComponents)
+    if (ComponentSuppressionRules.Num() > 0)
     {
-        if (!Comp || !Comp->IsRegistered()) continue;
+        TArray<UActorComponent*> AllComponents;
+        Owner->GetComponents(AllComponents);
 
-        bool bShouldSuppress = false;
-        FComponentSuppressionRule MatchedRule;
-        for (const FComponentSuppressionRule& Rule : ComponentSuppressionRules)
+        for (UActorComponent* Comp : AllComponents)
         {
-            if (Significance >= Rule.SuppressBelowSignificance) continue;
-            bool TagMatch = !Rule.ComponentTag.IsNone() && Comp->ComponentHasTag(Rule.ComponentTag);
-            bool NameMatch = !Rule.NameContains.IsEmpty() && Comp->GetName().Contains(Rule.NameContains);
+            if (!Comp || !Comp->IsRegistered()) continue;
 
-            switch (Rule.ComponentType)
+            bool bShouldSuppress = false;
+            FComponentSuppressionRule MatchedRule;
+            for (const FComponentSuppressionRule& Rule : ComponentSuppressionRules)
             {
-            case ESuppressionComponentType::Audio:
-                bShouldSuppress = Comp->IsA<UAudioComponent>();
-                break;
-            case ESuppressionComponentType::Niagara:
-                bShouldSuppress = Comp->IsA<UNiagaraComponent>();
-                break;
-            case ESuppressionComponentType::AbilitySystem:
-                bShouldSuppress = Comp->IsA<UAbilitySystemComponent>();
-                break;
-            case ESuppressionComponentType::Light:
-                bShouldSuppress = Comp->IsA<ULightComponent>();
-                break;
-            case ESuppressionComponentType::Widget:
-                bShouldSuppress = Comp->IsA<UWidgetComponent>() && (TagMatch || NameMatch || Rule.ComponentTag.IsNone());
-                break;
-            case ESuppressionComponentType::MotionWarping:
-                bShouldSuppress = NameMatch || TagMatch || Comp->GetName().Contains(TEXT("MotionWarp"));
-                break;
-            case ESuppressionComponentType::Hair:
-                bShouldSuppress = Comp->IsA<UGroomComponent>() || NameMatch || TagMatch ||
-                    Comp->GetName().Contains(TEXT("Groom")) || Comp->GetName().Contains(TEXT("Hair"));
-                break;
-            case ESuppressionComponentType::Physics:
-                if (UMeshComponent* Mesh = Cast<UMeshComponent>(Comp))
+                if (Significance >= Rule.SuppressBelowSignificance) continue;
+                bool TagMatch = !Rule.ComponentTag.IsNone() && Comp->ComponentHasTag(Rule.ComponentTag);
+                bool NameMatch = !Rule.NameContains.IsEmpty() && Comp->GetName().Contains(Rule.NameContains);
+
+                switch (Rule.ComponentType)
+                {
+                case ESuppressionComponentType::Audio:
+                    bShouldSuppress = Comp->IsA<UAudioComponent>();
+                    break;
+                case ESuppressionComponentType::Niagara:
+                    bShouldSuppress = Comp->IsA<UNiagaraComponent>();
+                    break;
+                case ESuppressionComponentType::AbilitySystem:
+                    bShouldSuppress = Comp->IsA<UAbilitySystemComponent>();
+                    break;
+                case ESuppressionComponentType::Light:
+                    bShouldSuppress = Comp->IsA<ULightComponent>();
+                    break;
+                case ESuppressionComponentType::Widget:
+                    bShouldSuppress = Comp->IsA<UWidgetComponent>() && (TagMatch || NameMatch || Rule.ComponentTag.IsNone());
+                    break;
+                case ESuppressionComponentType::MotionWarping:
+                    bShouldSuppress = NameMatch || TagMatch || Comp->GetName().Contains(TEXT("MotionWarp"));
+                    break;
+                case ESuppressionComponentType::Hair:
+                    bShouldSuppress = Comp->IsA<UGroomComponent>() || NameMatch || TagMatch ||
+                        Comp->GetName().Contains(TEXT("Groom")) || Comp->GetName().Contains(TEXT("Hair"));
+                    break;
+                case ESuppressionComponentType::Physics:
+                    if (UMeshComponent* Mesh = Cast<UMeshComponent>(Comp))
+                    {
+                        Mesh->SetSimulatePhysics(false);
+                    }
+                    bShouldSuppress = true;
+                    break;
+                case ESuppressionComponentType::CustomTag:
+                    bShouldSuppress = TagMatch;
+                    break;
+                default:
+                    break;
+                }
+
+                if (bShouldSuppress)
+                {
+                    MatchedRule = Rule;
+                    break;
+                }
+            }
+
+            if (bShouldSuppress && !SuppressedComponents.Contains(Comp))
+            {
+                Comp->SetComponentTickEnabled(false);
+
+                if (UAudioComponent* Audio = Cast<UAudioComponent>(Comp))
+                {
+                    Audio->Stop();
+                    Audio->SetActive(false);
+                }
+                else if (ULightComponent* Light = Cast<ULightComponent>(Comp))
+                {
+                    Light->SetVisibility(false);
+                    Light->SetActive(false);
+                }
+                else if (UNiagaraComponent* Niagara = Cast<UNiagaraComponent>(Comp))
+                {
+                    Niagara->DeactivateImmediate();
+                    Niagara->SetVisibility(false);
+                }
+                else if (UWidgetComponent* Widget = Cast<UWidgetComponent>(Comp))
+                {
+                    Widget->SetVisibility(false);
+                    Widget->SetComponentTickEnabled(false);
+                }
+                else if (UGroomComponent* Hair = Cast<UGroomComponent>(Comp))
+                {
+                    Hair->SetVisibility(false);
+                    Hair->Deactivate();
+                }
+                else if (UMeshComponent* Mesh = Cast<UMeshComponent>(Comp))
                 {
                     Mesh->SetSimulatePhysics(false);
                 }
-                bShouldSuppress = true;
-                break;
-            case ESuppressionComponentType::CustomTag:
-                bShouldSuppress = TagMatch;
-                break;
-            default:
-                break;
+                else
+                {
+                    Comp->Deactivate();
+                }
+                SuppressedComponents.Add(Comp, MatchedRule);
             }
-
-            if (bShouldSuppress)
+            else if (!bShouldSuppress && SuppressedComponents.Contains(Comp))
             {
-                MatchedRule = Rule;
-                break;
+                if (ULightComponent* Light = Cast<ULightComponent>(Comp))
+                {
+                    Light->SetVisibility(true);
+                    Light->SetComponentTickEnabled(true);
+                    Light->SetActive(true);
+                }
+                else if (UAudioComponent* Audio = Cast<UAudioComponent>(Comp))
+                {
+                    Audio->SetComponentTickEnabled(true);
+                    Audio->SetActive(true);
+                    Audio->Play();
+                }
+                else if (UNiagaraComponent* Niagara = Cast<UNiagaraComponent>(Comp))
+                {
+                    Niagara->SetComponentTickEnabled(true);
+                    Niagara->SetVisibility(true);
+                    Niagara->Activate();
+                }
+                else if (UWidgetComponent* Widget = Cast<UWidgetComponent>(Comp))
+                {
+                    Widget->SetVisibility(true);
+                    Widget->SetComponentTickEnabled(true);
+                }
+                else if (UGroomComponent* Hair = Cast<UGroomComponent>(Comp))
+                {
+                    Hair->SetVisibility(true);
+                    Hair->Activate();
+                }
+                else if (UMeshComponent* Mesh = Cast<UMeshComponent>(Comp))
+                {
+                    Mesh->SetSimulatePhysics(true);
+                    Mesh->SetComponentTickEnabled(true);
+                }
+                else
+                {
+                    Comp->SetComponentTickEnabled(true);
+                    Comp->Activate(true);
+                }
+                SuppressedComponents.Remove(Comp);
             }
-        }
-
-        if (bShouldSuppress && !SuppressedComponents.Contains(Comp))
-        {
-            Comp->SetComponentTickEnabled(false);
-
-            if (UAudioComponent* Audio = Cast<UAudioComponent>(Comp))
-            {
-                Audio->Stop();
-                Audio->SetActive(false);
-            }
-            else if (ULightComponent* Light = Cast<ULightComponent>(Comp))
-            {
-                Light->SetVisibility(false);
-                Light->SetActive(false);
-            }
-            else if (UNiagaraComponent* Niagara = Cast<UNiagaraComponent>(Comp))
-            {
-                Niagara->DeactivateImmediate();
-                Niagara->SetVisibility(false);
-            }
-            else if (UWidgetComponent* Widget = Cast<UWidgetComponent>(Comp))
-            {
-                Widget->SetVisibility(false);
-                Widget->SetComponentTickEnabled(false);
-            }
-            else if (UGroomComponent* Hair = Cast<UGroomComponent>(Comp))
-            {
-                Hair->SetVisibility(false);
-                Hair->Deactivate();
-            }
-            else if (UMeshComponent* Mesh = Cast<UMeshComponent>(Comp))
-            {
-                Mesh->SetSimulatePhysics(false);
-            }
-            else
-            {
-                Comp->Deactivate();
-            }
-            SuppressedComponents.Add(Comp, MatchedRule);
-        }
-        else if (!bShouldSuppress && SuppressedComponents.Contains(Comp))
-        {
-            if (ULightComponent* Light = Cast<ULightComponent>(Comp))
-            {
-                Light->SetVisibility(true);
-                Light->SetComponentTickEnabled(true);
-                Light->SetActive(true);
-            }
-            else if (UAudioComponent* Audio = Cast<UAudioComponent>(Comp))
-            {
-                Audio->SetComponentTickEnabled(true);
-                Audio->SetActive(true);
-                Audio->Play();
-            }
-            else if (UNiagaraComponent* Niagara = Cast<UNiagaraComponent>(Comp))
-            {
-                Niagara->SetComponentTickEnabled(true);
-                Niagara->SetVisibility(true);
-                Niagara->Activate();
-            }
-            else if (UWidgetComponent* Widget = Cast<UWidgetComponent>(Comp))
-            {
-                Widget->SetVisibility(true);
-                Widget->SetComponentTickEnabled(true);
-            }
-            else if (UGroomComponent* Hair = Cast<UGroomComponent>(Comp))
-            {
-                Hair->SetVisibility(true);
-                Hair->Activate();
-            }
-            else if (UMeshComponent* Mesh = Cast<UMeshComponent>(Comp))
-            {
-                Mesh->SetSimulatePhysics(true);
-                Mesh->SetComponentTickEnabled(true);
-            }
-            else
-            {
-                Comp->SetComponentTickEnabled(true);
-                Comp->Activate(true);
-            }
-            SuppressedComponents.Remove(Comp);
         }
     }
-
-
 
     if (bAffectAbilitySystemTick && CachedASC)
     {
@@ -882,6 +901,12 @@ void UDAI_PerfMngrComponent::TickComponent(float DeltaTime, enum ELevelTick Tick
 // Supports instant swap or a smooth cross-fade if a fade material and duration are set.
 void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime, float Significance)
 {
+    if (!ProxyBillboardMesh)
+    {
+        BillboardState = EProxySwapState::Active;
+        return;
+    }
+
     BillboardTimeInCurrentState += DeltaTime;
 
     switch (BillboardState)
@@ -1228,6 +1253,12 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime, float Sig
 // Handles swapping to/from a lightweight particle effect when the actor is extremely far away.
 void UDAI_PerfMngrComponent::HandleParticleProxySwap(float DeltaTime, float Significance)
 {
+    if (!ProxyParticleEffect)
+    {
+        ParticleState = EProxySwapState::Active;
+        return;
+    }
+
     ParticleTimeInCurrentState += DeltaTime;
 
     switch (ParticleState)
