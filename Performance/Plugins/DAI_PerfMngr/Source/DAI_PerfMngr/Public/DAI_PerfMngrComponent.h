@@ -302,6 +302,7 @@ public:
     bool bHasHISMInstance = false;
     FName ProxyHISMTag;
     FTransform ProxyHISMTransform;
+    int32 ProxyHISMInstanceIndex = INDEX_NONE;
 
     // Proxy components created at runtime
     UPROPERTY(Transient) UStaticMeshComponent* ProxyMeshComponent = nullptr;

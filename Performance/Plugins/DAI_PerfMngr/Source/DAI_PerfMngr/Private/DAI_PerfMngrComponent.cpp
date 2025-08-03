@@ -151,10 +151,11 @@ void UDAI_PerfMngrComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
         {
             if (UDAI_ProxyHISMManager* ProxyMgr = World->GetSubsystem<UDAI_ProxyHISMManager>())
             {
-                ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
+                ProxyMgr->RemoveInstanceByIndex(ProxyHISMTag, ProxyHISMInstanceIndex);
             }
         }
         bHasHISMInstance = false;
+        ProxyHISMInstanceIndex = INDEX_NONE;
     }
     Super::EndPlay(EndPlayReason);
 }
@@ -169,10 +170,11 @@ void UDAI_PerfMngrComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
         {
             if (UDAI_ProxyHISMManager* ProxyMgr = World->GetSubsystem<UDAI_ProxyHISMManager>())
             {
-                ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
+                ProxyMgr->RemoveInstanceByIndex(ProxyHISMTag, ProxyHISMInstanceIndex);
             }
         }
         bHasHISMInstance = false;
+        ProxyHISMInstanceIndex = INDEX_NONE;
     }
     Super::OnComponentDestroyed(bDestroyingHierarchy);
 }
@@ -203,10 +205,11 @@ void UDAI_PerfMngrComponent::SwapToProxy()
         {
             if (UDAI_ProxyHISMManager* ProxyMgr = World->GetSubsystem<UDAI_ProxyHISMManager>())
             {
-                ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
+                ProxyMgr->RemoveInstanceByIndex(ProxyHISMTag, ProxyHISMInstanceIndex);
             }
         }
         bHasHISMInstance = false;
+        ProxyHISMInstanceIndex = INDEX_NONE;
     }
 
     // Hide original mesh components while a proxy is shown.
@@ -245,7 +248,7 @@ void UDAI_PerfMngrComponent::SwapToProxy()
         {
             if (UDAI_ProxyHISMManager* ProxyMgr = World->GetSubsystem<UDAI_ProxyHISMManager>())
             {
-                FName ProxyTag = ProxyStaticMesh->GetFName();
+                FName ProxyTag = FName(*FString::Printf(TEXT("Proxy_%s_%s"), *Owner->GetName(), *ProxyStaticMesh->GetName()));
                 UE_LOG(LogTemp, Warning, TEXT("SwapToProxy: Owner: %s Mesh: %s"), *Owner->GetName(), *ProxyStaticMesh->GetName());
                 UHierarchicalInstancedStaticMeshComponent* HISM = ProxyMgr->GetOrCreateHISMForTag(ProxyTag, ProxyStaticMesh, Owner);
                 if (!HISM)
@@ -254,12 +257,11 @@ void UDAI_PerfMngrComponent::SwapToProxy()
                 }
                 else
                 {
-                    ProxyMgr->SetBatchSizeForTag(ProxyTag, ProxyBatchAddSize);
-                    ProxyMgr->QueueInstanceForBatch(ProxyTag, Owner->GetActorTransform());
-
+                    int32 AddedIndex = ProxyMgr->AddInstanceImmediate(ProxyTag, Owner->GetActorTransform());
                     ProxyHISMTransform = Owner->GetActorTransform();
                     ProxyHISMTag = ProxyTag;
-                    bHasHISMInstance = true;
+                    ProxyHISMInstanceIndex = AddedIndex;
+                    bHasHISMInstance = AddedIndex != INDEX_NONE;
                 }
             }
             else
@@ -294,6 +296,7 @@ void UDAI_PerfMngrComponent::SwapToProxy()
         Widget->SetVisibility(false);
         Widget->SetComponentTickEnabled(false);
     }
+    EnsureSingleRepresentation();
 }
 
 // Return from proxy back to the full, original actor visuals.
@@ -311,10 +314,11 @@ void UDAI_PerfMngrComponent::SwapToFull()
         {
             if (UDAI_ProxyHISMManager* ProxyMgr = World->GetSubsystem<UDAI_ProxyHISMManager>())
             {
-                ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
+                ProxyMgr->RemoveInstanceByIndex(ProxyHISMTag, ProxyHISMInstanceIndex);
             }
         }
         bHasHISMInstance = false;
+        ProxyHISMInstanceIndex = INDEX_NONE;
     }
 
     // Clean up any spawned proxy components.
@@ -369,6 +373,7 @@ void UDAI_PerfMngrComponent::SwapToFull()
         Widget->SetVisibility(true);
         Widget->SetComponentTickEnabled(true);
     }
+    EnsureSingleRepresentation();
 }
 
 // State machine that decides when to enter/exit proxy mode based on "significance" (how important/near it is).
@@ -423,6 +428,7 @@ void UDAI_PerfMngrComponent::HandleProxySwap(float DeltaTime, float Significance
         }
         break;
     }
+    EnsureSingleRepresentation();
 }
 
 // If enabled, tint dynamic materials from red (low importance) to green (high importance).
@@ -917,9 +923,10 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime, float Sig
                 {
                     if (UDAI_ProxyHISMManager* ProxyMgr = GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>())
                     {
-                        ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
+                        ProxyMgr->RemoveInstanceByIndex(ProxyHISMTag, ProxyHISMInstanceIndex);
                     }
                     bHasHISMInstance = false;
+                    ProxyHISMInstanceIndex = INDEX_NONE;
                 }
 
                 // Add a billboard instance via the HISM manager
@@ -927,15 +934,15 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime, float Sig
                 {
                     if (UDAI_ProxyHISMManager* ProxyMgr = GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>())
                     {
-                        FName BillboardTag = ProxyBillboardMesh->GetFName();
+                        FName BillboardTag = FName(*FString::Printf(TEXT("Billboard_%s_%s"), *GetOwner()->GetName(), *ProxyBillboardMesh->GetName()));
                         UHierarchicalInstancedStaticMeshComponent* HISM = ProxyMgr->GetOrCreateHISMForTag(BillboardTag, ProxyBillboardMesh, GetOwner());
                         if (HISM)
                         {
-                            ProxyMgr->SetBatchSizeForTag(BillboardTag, ProxyBatchAddSize);
-                            ProxyMgr->QueueInstanceForBatch(BillboardTag, GetOwner()->GetActorTransform());
+                            int32 AddedIndex = ProxyMgr->AddInstanceImmediate(BillboardTag, GetOwner()->GetActorTransform());
                             ProxyHISMTag = BillboardTag;
                             ProxyHISMTransform = GetOwner()->GetActorTransform();
-                            bHasHISMInstance = true;
+                            ProxyHISMInstanceIndex = AddedIndex;
+                            bHasHISMInstance = AddedIndex != INDEX_NONE;
                         }
                     }
                 }
@@ -1083,24 +1090,25 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime, float Sig
                 {
                     if (UDAI_ProxyHISMManager* ProxyMgr = GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>())
                     {
-                        ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
+                        ProxyMgr->RemoveInstanceByIndex(ProxyHISMTag, ProxyHISMInstanceIndex);
                     }
                     bHasHISMInstance = false;
+                    ProxyHISMInstanceIndex = INDEX_NONE;
                 }
                 // Restore the proxy instance via HISM
                 if (ProxyStaticMesh)
                 {
                     if (UDAI_ProxyHISMManager* ProxyMgr = GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>())
                     {
-                        FName ProxyTag = ProxyStaticMesh->GetFName();
+                        FName ProxyTag = FName(*FString::Printf(TEXT("Proxy_%s_%s"), *GetOwner()->GetName(), *ProxyStaticMesh->GetName()));
                         UHierarchicalInstancedStaticMeshComponent* HISM = ProxyMgr->GetOrCreateHISMForTag(ProxyTag, ProxyStaticMesh, GetOwner());
                         if (HISM)
                         {
-                            ProxyMgr->SetBatchSizeForTag(ProxyTag, ProxyBatchAddSize);
-                            ProxyMgr->QueueInstanceForBatch(ProxyTag, GetOwner()->GetActorTransform());
+                            int32 AddedIndex = ProxyMgr->AddInstanceImmediate(ProxyTag, GetOwner()->GetActorTransform());
                             ProxyHISMTag = ProxyTag;
                             ProxyHISMTransform = GetOwner()->GetActorTransform();
-                            bHasHISMInstance = true;
+                            ProxyHISMInstanceIndex = AddedIndex;
+                            bHasHISMInstance = AddedIndex != INDEX_NONE;
                         }
                     }
                 }
@@ -1210,7 +1218,7 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime, float Sig
         }
         break;
     }
-    }
+    EnsureSingleRepresentation();
 }
 
 
