@@ -19,7 +19,8 @@ public class DAI_PerfMngr : ModuleRules
             "UMG",
             "AIModule",
             "Niagara",
-            "HairStrandsCore"
+            "HairStrandsCore",
+            "AudioMixer"
         });
 
         PublicIncludePaths.AddRange(new string[] {
