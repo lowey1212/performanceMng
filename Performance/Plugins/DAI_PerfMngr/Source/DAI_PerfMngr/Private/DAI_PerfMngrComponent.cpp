@@ -1,4 +1,4 @@
-﻿#include "DAI_PerfMngrComponent.h"
+#include "DAI_PerfMngrComponent.h"
 #include "SignificanceManager.h"
 #include "TimerManager.h"
 #include "Net/UnrealNetwork.h"
@@ -256,6 +256,7 @@ void UDAI_PerfMngrComponent::SwapToProxy()
                 }
                 else
                 {
+
                     ProxyMgr->SetBatchSizeForTag(ProxyTag, ProxyBatchAddSize);
                     ProxyMgr->QueueInstanceForBatch(ProxyTag, Owner->GetActorTransform());
                     ProxyHISMTransform = Owner->GetActorTransform();
