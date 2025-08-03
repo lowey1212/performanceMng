@@ -373,4 +373,6 @@ protected:
     void HandleBillboardProxySwap(float DeltaTime, float Significance);
     /** Handles particle proxy enter/exit based on significance. */
     void HandleParticleProxySwap(float DeltaTime, float Significance);
+    /** Ensures only one visual representation is active at any time. */
+    void EnsureSingleRepresentation();
 };

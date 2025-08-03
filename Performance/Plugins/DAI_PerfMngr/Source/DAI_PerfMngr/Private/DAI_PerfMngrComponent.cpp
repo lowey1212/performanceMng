@@ -745,11 +745,102 @@ void UDAI_PerfMngrComponent::ForceSwapToFull()
     ProxyTimeInCurrentState = 0.0f;
 }
 
+// Ensure only one representation (full, proxy, or billboard) is active at a time.
+void UDAI_PerfMngrComponent::EnsureSingleRepresentation()
+{
+    AActor* Owner = GetOwner();
+    if (!Owner)
+    {
+        return;
+    }
+
+    const bool bBillboardVisible = BillboardMeshComponent && BillboardMeshComponent->IsVisible();
+    const bool bProxyVisible = ProxyMeshComponent && ProxyMeshComponent->IsVisible();
+
+    bool bFullVisible = false;
+    TArray<UMeshComponent*> Meshes;
+    Owner->GetComponents<UMeshComponent>(Meshes);
+    for (UMeshComponent* Mesh : Meshes)
+    {
+        if (Mesh && Mesh->IsVisible() && Mesh != ProxyMeshComponent && Mesh != BillboardMeshComponent)
+        {
+            bFullVisible = true;
+            break;
+        }
+    }
+
+    const int32 VisibleCount = (bBillboardVisible ? 1 : 0) + (bProxyVisible ? 1 : 0) + (bFullVisible ? 1 : 0);
+    if (VisibleCount <= 1)
+    {
+        return;
+    }
+
+    if (bBillboardVisible)
+    {
+        if (ProxyMeshComponent)
+        {
+            ProxyMeshComponent->DestroyComponent();
+            ProxyMeshComponent = nullptr;
+        }
+        for (UMeshComponent* Mesh : Meshes)
+        {
+            if (Mesh && Mesh != BillboardMeshComponent)
+            {
+                Mesh->SetVisibility(false, true);
+                Mesh->SetComponentTickEnabled(false);
+            }
+        }
+    }
+    else if (bProxyVisible)
+    {
+        if (BillboardMeshComponent)
+        {
+            BillboardMeshComponent->DestroyComponent();
+            BillboardMeshComponent = nullptr;
+        }
+        for (UMeshComponent* Mesh : Meshes)
+        {
+            if (Mesh && Mesh != ProxyMeshComponent)
+            {
+                Mesh->SetVisibility(false, true);
+                Mesh->SetComponentTickEnabled(false);
+            }
+        }
+    }
+    else
+    {
+        SwapToFull();
+        ProxyState = EProxySwapState::Active;
+        BillboardState = EProxySwapState::Active;
+    }
+
+    bool bBillboardCheck = BillboardMeshComponent && BillboardMeshComponent->IsVisible();
+    bool bProxyCheck = ProxyMeshComponent && ProxyMeshComponent->IsVisible();
+    bool bFullCheck = false;
+    for (UMeshComponent* Mesh : Meshes)
+    {
+        if (Mesh && Mesh->IsVisible() && Mesh != ProxyMeshComponent && Mesh != BillboardMeshComponent)
+        {
+            bFullCheck = true;
+            break;
+        }
+    }
+    const int32 Remaining = (bBillboardCheck ? 1 : 0) + (bProxyCheck ? 1 : 0) + (bFullCheck ? 1 : 0);
+    if (Remaining > 1)
+    {
+        SwapToFull();
+        ProxyState = EProxySwapState::Active;
+        BillboardState = EProxySwapState::Active;
+    }
+}
+
 // Per-frame updates for this component.
 // Keeps billboards facing the camera and prints optional debug info.
 void UDAI_PerfMngrComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+    EnsureSingleRepresentation();
 
     if (BillboardMeshComponent && BillboardMeshComponent->IsVisible())
     {
