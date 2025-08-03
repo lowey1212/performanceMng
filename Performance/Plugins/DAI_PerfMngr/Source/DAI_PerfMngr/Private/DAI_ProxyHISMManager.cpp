@@ -11,13 +11,32 @@
 // (We add them in chunks to avoid frame spikes.)
 void UDAI_ProxyHISMManager::QueueInstanceForBatch(FName Tag, const FTransform& Transform)
 {
-    PendingBatchedAdds.FindOrAdd(Tag).Add(Transform);
+    TArray<FTransform>& Queue = PendingBatchedAdds.FindOrAdd(Tag);
+    Queue.RemoveAll([
+        &Transform
+    ](const FTransform& Existing)
+    {
+        return Existing.GetLocation().Equals(Transform.GetLocation(), 1.0f);
+    });
+    Queue.Add(Transform);
 }
 
 // Set how many instances per tick we add for this specific tag.
 void UDAI_ProxyHISMManager::SetBatchSizeForTag(FName Tag, int32 BatchSize)
 {
     TagToBatchSize.FindOrAdd(Tag) = BatchSize;
+}
+
+int32 UDAI_ProxyHISMManager::AddInstanceImmediate(FName Tag, const FTransform& Transform)
+{
+    if (bIsShuttingDown)
+        return INDEX_NONE;
+
+    if (UHierarchicalInstancedStaticMeshComponent* HISM = TagToHISM.FindRef(Tag))
+    {
+        return HISM->AddInstance(Transform);
+    }
+    return INDEX_NONE;
 }
 
 // Per-frame manager tick: add a limited number of pending instances to each HISM,
@@ -53,7 +72,7 @@ void UDAI_ProxyHISMManager::Tick(float DeltaTime)
     }
 }
 
-// Find the world’s dedicated root actor for all proxy HISMs; spawn one if missing.
+// Find the worlds dedicated root actor for all proxy HISMs; spawn one if missing.
 AProxyHISMRootActor* FindOrSpawnProxyHISMRootActor(UWorld* World)
 {
     // Look for an existing root actor
@@ -72,7 +91,7 @@ AProxyHISMRootActor* FindOrSpawnProxyHISMRootActor(UWorld* World)
     return NewRoot;
 }
 
-// Get the HISM component for a tag, or create and register one if it doesn’t exist yet.
+// Get the HISM component for a tag, or create and register one if it doesnt exist yet.
 // All such HISMs are attached under the root actor for organization.
 UHierarchicalInstancedStaticMeshComponent* UDAI_ProxyHISMManager::GetOrCreateHISMForTag(FName Tag, UStaticMesh* Mesh, UObject* Outer)
 {
@@ -132,7 +151,7 @@ UHierarchicalInstancedStaticMeshComponent* UDAI_ProxyHISMManager::GetOrCreateHIS
     return HISM;
 }
 
-// Remove the HISM instance that’s at (or very close to) the given transform.
+// Remove the HISM instance thats at (or very close to) the given transform.
 void UDAI_ProxyHISMManager::RemoveInstanceAtTransform(FName Tag, const FTransform& Transform)
 {
     if (bIsShuttingDown)
@@ -168,6 +187,20 @@ void UDAI_ProxyHISMManager::RemoveInstanceAtTransform(FName Tag, const FTransfor
         else
         {
             TagToHISM.Remove(Tag);
+        }
+    }
+}
+
+void UDAI_ProxyHISMManager::RemoveInstanceByIndex(FName Tag, int32 Index)
+{
+    if (bIsShuttingDown)
+        return;
+
+    if (UHierarchicalInstancedStaticMeshComponent* HISM = TagToHISM.FindRef(Tag))
+    {
+        if (Index >= 0 && Index < HISM->GetInstanceCount())
+        {
+            HISM->RemoveInstance(Index);
         }
     }
 }
