@@ -3,6 +3,7 @@
 #include "AbilitySystemComponent.h"
 #include "Animation/AnimInstance.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
+#include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "Components/LightComponent.h"
@@ -10,13 +11,12 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/WidgetComponent.h"
-#include "Camera/CameraComponent.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "DAI_ProxyHISMManager.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "GroomComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -581,15 +581,15 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
           // suppressed tick interval and the "low" interval as significance
           // approaches the suppression threshold.
           const float Range = MatchedRule->SuppressionThreshold;
-          const float Normalized = Range > KINDA_SMALL_NUMBER
-                                       ? FMath::Clamp(Significance / Range, 0.0f,
-                                                      1.0f)
-                                       : 1.0f;
-          float SuppTick = FMath::Lerp(MatchedRule->ComponentTickInterval,
-                                       MatchedRule->ComponentTickIntervalLow,
-                                       Normalized);
-          SuppTick =
-              FMath::Clamp(SuppTick * QualityMultiplier, MinTickClamp, MaxTickClamp);
+          const float Normalized =
+              Range > KINDA_SMALL_NUMBER
+                  ? FMath::Clamp(Significance / Range, 0.0f, 1.0f)
+                  : 1.0f;
+          float SuppTick =
+              FMath::Lerp(MatchedRule->ComponentTickInterval,
+                          MatchedRule->ComponentTickIntervalLow, Normalized);
+          SuppTick = FMath::Clamp(SuppTick * QualityMultiplier, MinTickClamp,
+                                  MaxTickClamp);
           Comp->SetComponentTickInterval(SuppTick);
           Comp->SetComponentTickEnabled(true);
           SuppressedComponents.Add(Comp, *MatchedRule);
@@ -606,8 +606,7 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
                          Cast<UNiagaraComponent>(Comp)) {
             Niagara->DeactivateImmediate();
             Niagara->SetVisibility(false);
-          } else if (UWidgetComponent *Widget =
-                         Cast<UWidgetComponent>(Comp)) {
+          } else if (UWidgetComponent *Widget = Cast<UWidgetComponent>(Comp)) {
             Widget->SetVisibility(false);
             Widget->SetComponentTickEnabled(false);
           } else if (UGroomComponent *Hair = Cast<UGroomComponent>(Comp)) {
@@ -662,9 +661,9 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
             MatchedRule->ComponentTickIntervalLow > 0.0f) {
           // Directly map significance into a high/low tick interval range so
           // components smoothly transition between fast and slow ticking.
-          float ActiveTick = FMath::Lerp(
-              MatchedRule->ComponentTickIntervalHigh,
-              MatchedRule->ComponentTickIntervalLow, 1.0f - Significance);
+          float ActiveTick = FMath::Lerp(MatchedRule->ComponentTickIntervalHigh,
+                                         MatchedRule->ComponentTickIntervalLow,
+                                         1.0f - Significance);
           ActiveTick = FMath::Clamp(ActiveTick * QualityMultiplier,
                                     MinTickClamp, MaxTickClamp);
           Comp->SetComponentTickInterval(ActiveTick);
@@ -673,12 +672,17 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
       }
 
 #if WITH_EDITOR
-      if (MatchedRule->bPrintTickRate && GEngine) {
-        const float CurrentTick = Comp->GetComponentTickInterval();
-        GEngine->AddOnScreenDebugMessage(
-            reinterpret_cast<uint64>(Comp), 0.f, FColor::Green,
-            FString::Printf(TEXT("%s Tick: %.3f"), *Comp->GetName(),
-                            CurrentTick));
+      if (GEngine) {
+        const uint64 DebugKey = reinterpret_cast<uint64>(Comp);
+        if (MatchedRule->bPrintTickRate) {
+          const float CurrentTick = Comp->GetComponentTickInterval();
+          GEngine->AddOnScreenDebugMessage(
+              DebugKey, TickEvaluationRate, FColor::Green,
+              FString::Printf(TEXT("%s Tick: %.3f"), *Comp->GetName(),
+                              CurrentTick));
+        } else {
+          GEngine->RemoveOnScreenDebugMessage(DebugKey);
+        }
       }
 #endif
     }
