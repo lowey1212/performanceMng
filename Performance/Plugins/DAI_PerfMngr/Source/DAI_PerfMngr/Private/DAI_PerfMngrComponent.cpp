@@ -533,8 +533,6 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
             bShouldSuppress = NameMatch || TagMatch ||
                 Comp->GetName().Contains(TEXT("MotionWarp"));
             break;
-
-          break;
         case ESuppressionComponentType::Hair:
           bShouldSuppress = Comp->IsA<UGroomComponent>() || NameMatch ||
                             TagMatch ||
@@ -563,55 +561,65 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
       }
 
       if (bShouldSuppress && !SuppressedComponents.Contains(Comp)) {
-        Comp->SetComponentTickEnabled(false);
-
-        if (UAudioComponent *Audio = Cast<UAudioComponent>(Comp)) {
-          Audio->Stop();
-          Audio->SetActive(false);
-        } else if (ULightComponent *Light = Cast<ULightComponent>(Comp)) {
-          Light->SetVisibility(false);
-          Light->SetActive(false);
-        } else if (UNiagaraComponent *Niagara = Cast<UNiagaraComponent>(Comp)) {
-          Niagara->DeactivateImmediate();
-          Niagara->SetVisibility(false);
-        } else if (UWidgetComponent *Widget = Cast<UWidgetComponent>(Comp)) {
-          Widget->SetVisibility(false);
-          Widget->SetComponentTickEnabled(false);
-        } else if (UGroomComponent *Hair = Cast<UGroomComponent>(Comp)) {
-          Hair->SetVisibility(false);
-          Hair->Deactivate();
-        } else if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
-          Mesh->SetSimulatePhysics(false);
+        if (MatchedRule.ComponentTickInterval > 0.0f) {
+          Comp->SetComponentTickInterval(MatchedRule.ComponentTickInterval);
+          Comp->SetComponentTickEnabled(true);
         } else {
-          Comp->Deactivate();
+          Comp->SetComponentTickEnabled(false);
+
+          if (UAudioComponent *Audio = Cast<UAudioComponent>(Comp)) {
+            Audio->Stop();
+            Audio->SetActive(false);
+          } else if (ULightComponent *Light = Cast<ULightComponent>(Comp)) {
+            Light->SetVisibility(false);
+            Light->SetActive(false);
+          } else if (UNiagaraComponent *Niagara = Cast<UNiagaraComponent>(Comp)) {
+            Niagara->DeactivateImmediate();
+            Niagara->SetVisibility(false);
+          } else if (UWidgetComponent *Widget = Cast<UWidgetComponent>(Comp)) {
+            Widget->SetVisibility(false);
+            Widget->SetComponentTickEnabled(false);
+          } else if (UGroomComponent *Hair = Cast<UGroomComponent>(Comp)) {
+            Hair->SetVisibility(false);
+            Hair->Deactivate();
+          } else if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
+            Mesh->SetSimulatePhysics(false);
+          } else {
+            Comp->Deactivate();
+          }
         }
         SuppressedComponents.Add(Comp, MatchedRule);
       } else if (!bShouldSuppress && SuppressedComponents.Contains(Comp)) {
-        if (ULightComponent *Light = Cast<ULightComponent>(Comp)) {
-          Light->SetVisibility(true);
-          Light->SetComponentTickEnabled(true);
-          Light->SetActive(true);
-        } else if (UAudioComponent *Audio = Cast<UAudioComponent>(Comp)) {
-          Audio->SetComponentTickEnabled(true);
-          Audio->SetActive(true);
-          Audio->Play();
-        } else if (UNiagaraComponent *Niagara = Cast<UNiagaraComponent>(Comp)) {
-          Niagara->SetComponentTickEnabled(true);
-          Niagara->SetVisibility(true);
-          Niagara->Activate();
-        } else if (UWidgetComponent *Widget = Cast<UWidgetComponent>(Comp)) {
-          Widget->SetVisibility(true);
-          Widget->SetComponentTickEnabled(true);
-        } else if (UGroomComponent *Hair = Cast<UGroomComponent>(Comp)) {
-          Hair->SetVisibility(true);
-          Hair->Activate();
-        } else if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
-          Mesh->SetSimulatePhysics(true);
-          Mesh->SetComponentTickEnabled(true);
-        } else {
-          Comp->SetComponentTickEnabled(true);
-          Comp->Activate(true);
+        const FComponentSuppressionRule &PrevRule = SuppressedComponents[Comp];
+        if (PrevRule.ComponentTickInterval <= 0.0f) {
+          if (ULightComponent *Light = Cast<ULightComponent>(Comp)) {
+            Light->SetVisibility(true);
+            Light->SetComponentTickEnabled(true);
+            Light->SetActive(true);
+          } else if (UAudioComponent *Audio = Cast<UAudioComponent>(Comp)) {
+            Audio->SetComponentTickEnabled(true);
+            Audio->SetActive(true);
+            Audio->Play();
+          } else if (UNiagaraComponent *Niagara = Cast<UNiagaraComponent>(Comp)) {
+            Niagara->SetComponentTickEnabled(true);
+            Niagara->SetVisibility(true);
+            Niagara->Activate();
+          } else if (UWidgetComponent *Widget = Cast<UWidgetComponent>(Comp)) {
+            Widget->SetVisibility(true);
+            Widget->SetComponentTickEnabled(true);
+          } else if (UGroomComponent *Hair = Cast<UGroomComponent>(Comp)) {
+            Hair->SetVisibility(true);
+            Hair->Activate();
+          } else if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
+            Mesh->SetSimulatePhysics(true);
+            Mesh->SetComponentTickEnabled(true);
+          } else {
+            Comp->SetComponentTickEnabled(true);
+            Comp->Activate(true);
+          }
         }
+        Comp->SetComponentTickInterval(0.0f);
+        Comp->SetComponentTickEnabled(true);
         SuppressedComponents.Remove(Comp);
       }
     }
