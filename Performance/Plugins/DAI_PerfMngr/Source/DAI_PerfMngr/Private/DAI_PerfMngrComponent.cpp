@@ -10,6 +10,8 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "DAI_ProxyHISMManager.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
@@ -550,6 +552,11 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
           }
           bMatches = true;
           break;
+        case ESuppressionComponentType::Camera:
+          bMatches = Comp->IsA<UCameraComponent>() ||
+                     Comp->IsA<USpringArmComponent>() ||
+                     Comp->GetClass()->GetName().Contains(TEXT("GASCamera"));
+          break;
         case ESuppressionComponentType::CustomTag:
           bMatches = TagMatch;
           break;
@@ -664,6 +671,16 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
           Comp->SetComponentTickEnabled(true);
         }
       }
+
+#if WITH_EDITOR
+      if (MatchedRule->bPrintTickRate && GEngine) {
+        const float CurrentTick = Comp->GetComponentTickInterval();
+        GEngine->AddOnScreenDebugMessage(
+            reinterpret_cast<uint64>(Comp), 0.f, FColor::Green,
+            FString::Printf(TEXT("%s Tick: %.3f"), *Comp->GetName(),
+                            CurrentTick));
+      }
+#endif
     }
   }
 
