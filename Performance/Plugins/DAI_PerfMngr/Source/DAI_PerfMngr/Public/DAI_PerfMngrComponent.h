@@ -53,17 +53,27 @@ USTRUCT(BlueprintType)
 struct FComponentSuppressionRule {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
+        meta = (ToolTip = "Type of component to match for suppression."))
     ESuppressionComponentType ComponentType = ESuppressionComponentType::Audio;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
+        meta = (ToolTip = "Optional component tag that must be present to match."))
     FName ComponentTagFilter;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
+        meta = (ToolTip = "Substring that component name must contain to match."))
     FString NameContains;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
+        meta = (ClampMin = "0.0", ClampMax = "1.0",
+            ToolTip = "Significance value below which the component will be disabled."))
     float SuppressionThreshold = 0.5f;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
+        meta = (ClampMin = "0.0",
+            ToolTip = "Tick interval to apply while suppressed (0 disables the component)."))
+    float ComponentTickInterval = 0.0f;
 };
 
 
