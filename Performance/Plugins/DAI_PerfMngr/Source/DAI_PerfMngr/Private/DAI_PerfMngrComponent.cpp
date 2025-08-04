@@ -483,8 +483,16 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
     DrawDebugSphere(GetWorld(), GetOwner()->GetActorLocation(), 100.f, 16,
                     FColor::Magenta, false, ProxyDebugSphereDuration);
   }
+  float QualityMultiplier = 1.0f;
+  if (PerformanceQuality == EPerformanceQuality::Medium) {
+    QualityMultiplier = 1.25f;
+  } else if (PerformanceQuality == EPerformanceQuality::Low) {
+    QualityMultiplier = 1.5f;
+  }
+
   float TickRate = FMath::Clamp(
-      FMath::Lerp(TickIntervalHigh, TickIntervalLow, 1.0f - Significance),
+      FMath::Lerp(TickIntervalHigh, TickIntervalLow, 1.0f - Significance) *
+          QualityMultiplier,
       MinTickClamp, MaxTickClamp);
 
   Owner->SetActorTickInterval(TickRate);
@@ -501,126 +509,147 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
       if (!Comp || !Comp->IsRegistered())
         continue;
 
-      bool bShouldSuppress = false;
-      FComponentSuppressionRule MatchedRule;
-      for (const FComponentSuppressionRule &Rule : ComponentSuppressionRules) {
-          if (Significance >= Rule.SuppressionThreshold)
-          continue;
+      FComponentSuppressionRule *MatchedRule = nullptr;
+      for (FComponentSuppressionRule &Rule : ComponentSuppressionRules) {
         bool TagMatch = !Rule.ComponentTagFilter.IsNone() &&
-              Comp->ComponentHasTag(Rule.ComponentTagFilter);
+                        Comp->ComponentHasTag(Rule.ComponentTagFilter);
         bool NameMatch = !Rule.NameContains.IsEmpty() &&
                          Comp->GetName().Contains(Rule.NameContains);
 
+        bool bMatches = false;
         switch (Rule.ComponentType) {
         case ESuppressionComponentType::Audio:
-          bShouldSuppress = Comp->IsA<UAudioComponent>();
+          bMatches = Comp->IsA<UAudioComponent>();
           break;
         case ESuppressionComponentType::Niagara:
-          bShouldSuppress = Comp->IsA<UNiagaraComponent>();
+          bMatches = Comp->IsA<UNiagaraComponent>();
           break;
         case ESuppressionComponentType::AbilitySystem:
-          bShouldSuppress = Comp->IsA<UAbilitySystemComponent>();
+          bMatches = Comp->IsA<UAbilitySystemComponent>();
           break;
         case ESuppressionComponentType::Light:
-          bShouldSuppress = Comp->IsA<ULightComponent>();
+          bMatches = Comp->IsA<ULightComponent>();
           break;
         case ESuppressionComponentType::Widget:
-            bShouldSuppress =
-                Comp->IsA<UWidgetComponent>() &&
-                (TagMatch || NameMatch || Rule.ComponentTagFilter.IsNone());
-            break;
+          bMatches =
+              Comp->IsA<UWidgetComponent>() &&
+              (TagMatch || NameMatch || Rule.ComponentTagFilter.IsNone());
+          break;
         case ESuppressionComponentType::MotionWarping:
-            bShouldSuppress = NameMatch || TagMatch ||
-                Comp->GetName().Contains(TEXT("MotionWarp"));
-            break;
+          bMatches = NameMatch || TagMatch ||
+                     Comp->GetName().Contains(TEXT("MotionWarp"));
+          break;
         case ESuppressionComponentType::Hair:
-          bShouldSuppress = Comp->IsA<UGroomComponent>() || NameMatch ||
-                            TagMatch ||
-                            Comp->GetName().Contains(TEXT("Groom")) ||
-                            Comp->GetName().Contains(TEXT("Hair"));
+          bMatches = Comp->IsA<UGroomComponent>() || NameMatch || TagMatch ||
+                     Comp->GetName().Contains(TEXT("Groom")) ||
+                     Comp->GetName().Contains(TEXT("Hair"));
           break;
         case ESuppressionComponentType::Physics:
-            if (UMeshComponent* Mesh = Cast<UMeshComponent>(Comp)) {
-                (void)Mesh->SetSimulatePhysics(false);  // ✅ Discard return value cleanly
-            }
-
-            bShouldSuppress = true;
-            break;
-
+          if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
+            (void)Mesh->SetSimulatePhysics(false);
+          }
+          bMatches = true;
+          break;
         case ESuppressionComponentType::CustomTag:
-          bShouldSuppress = TagMatch;
+          bMatches = TagMatch;
           break;
         default:
           break;
         }
 
-        if (bShouldSuppress) {
-          MatchedRule = Rule;
+        if (bMatches) {
+          MatchedRule = &Rule;
           break;
         }
       }
 
-      if (bShouldSuppress && !SuppressedComponents.Contains(Comp)) {
-        if (MatchedRule.ComponentTickInterval > 0.0f) {
-          Comp->SetComponentTickInterval(MatchedRule.ComponentTickInterval);
-          Comp->SetComponentTickEnabled(true);
-        } else {
-          Comp->SetComponentTickEnabled(false);
+      if (!MatchedRule)
+        continue;
 
-          if (UAudioComponent *Audio = Cast<UAudioComponent>(Comp)) {
-            Audio->Stop();
-            Audio->SetActive(false);
-          } else if (ULightComponent *Light = Cast<ULightComponent>(Comp)) {
-            Light->SetVisibility(false);
-            Light->SetActive(false);
-          } else if (UNiagaraComponent *Niagara = Cast<UNiagaraComponent>(Comp)) {
-            Niagara->DeactivateImmediate();
-            Niagara->SetVisibility(false);
-          } else if (UWidgetComponent *Widget = Cast<UWidgetComponent>(Comp)) {
-            Widget->SetVisibility(false);
-            Widget->SetComponentTickEnabled(false);
-          } else if (UGroomComponent *Hair = Cast<UGroomComponent>(Comp)) {
-            Hair->SetVisibility(false);
-            Hair->Deactivate();
-          } else if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
-            Mesh->SetSimulatePhysics(false);
-          } else {
-            Comp->Deactivate();
-          }
-        }
-        SuppressedComponents.Add(Comp, MatchedRule);
-      } else if (!bShouldSuppress && SuppressedComponents.Contains(Comp)) {
-        const FComponentSuppressionRule &PrevRule = SuppressedComponents[Comp];
-        if (PrevRule.ComponentTickInterval <= 0.0f) {
-          if (ULightComponent *Light = Cast<ULightComponent>(Comp)) {
-            Light->SetVisibility(true);
-            Light->SetComponentTickEnabled(true);
-            Light->SetActive(true);
-          } else if (UAudioComponent *Audio = Cast<UAudioComponent>(Comp)) {
-            Audio->SetComponentTickEnabled(true);
-            Audio->SetActive(true);
-            Audio->Play();
-          } else if (UNiagaraComponent *Niagara = Cast<UNiagaraComponent>(Comp)) {
-            Niagara->SetComponentTickEnabled(true);
-            Niagara->SetVisibility(true);
-            Niagara->Activate();
-          } else if (UWidgetComponent *Widget = Cast<UWidgetComponent>(Comp)) {
-            Widget->SetVisibility(true);
-            Widget->SetComponentTickEnabled(true);
-          } else if (UGroomComponent *Hair = Cast<UGroomComponent>(Comp)) {
-            Hair->SetVisibility(true);
-            Hair->Activate();
-          } else if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
-            Mesh->SetSimulatePhysics(true);
-            Mesh->SetComponentTickEnabled(true);
-          } else {
+      bool bShouldSuppress = Significance < MatchedRule->SuppressionThreshold;
+
+      if (bShouldSuppress) {
+        if (!SuppressedComponents.Contains(Comp)) {
+          if (MatchedRule->ComponentTickInterval > 0.0f) {
+            float SuppTick = FMath::Clamp(MatchedRule->ComponentTickInterval *
+                                              QualityMultiplier,
+                                          MinTickClamp, MaxTickClamp);
+            Comp->SetComponentTickInterval(SuppTick);
             Comp->SetComponentTickEnabled(true);
-            Comp->Activate(true);
+          } else {
+            Comp->SetComponentTickEnabled(false);
+
+            if (UAudioComponent *Audio = Cast<UAudioComponent>(Comp)) {
+              Audio->Stop();
+              Audio->SetActive(false);
+            } else if (ULightComponent *Light = Cast<ULightComponent>(Comp)) {
+              Light->SetVisibility(false);
+              Light->SetActive(false);
+            } else if (UNiagaraComponent *Niagara =
+                           Cast<UNiagaraComponent>(Comp)) {
+              Niagara->DeactivateImmediate();
+              Niagara->SetVisibility(false);
+            } else if (UWidgetComponent *Widget =
+                           Cast<UWidgetComponent>(Comp)) {
+              Widget->SetVisibility(false);
+              Widget->SetComponentTickEnabled(false);
+            } else if (UGroomComponent *Hair = Cast<UGroomComponent>(Comp)) {
+              Hair->SetVisibility(false);
+              Hair->Deactivate();
+            } else if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
+              Mesh->SetSimulatePhysics(false);
+            } else {
+              Comp->Deactivate();
+            }
           }
+          SuppressedComponents.Add(Comp, *MatchedRule);
         }
-        Comp->SetComponentTickInterval(0.0f);
-        Comp->SetComponentTickEnabled(true);
-        SuppressedComponents.Remove(Comp);
+      } else {
+        if (SuppressedComponents.Contains(Comp)) {
+          const FComponentSuppressionRule &PrevRule =
+              SuppressedComponents[Comp];
+          if (PrevRule.ComponentTickInterval <= 0.0f) {
+            if (ULightComponent *Light = Cast<ULightComponent>(Comp)) {
+              Light->SetVisibility(true);
+              Light->SetComponentTickEnabled(true);
+              Light->SetActive(true);
+            } else if (UAudioComponent *Audio = Cast<UAudioComponent>(Comp)) {
+              Audio->SetComponentTickEnabled(true);
+              Audio->SetActive(true);
+              Audio->Play();
+            } else if (UNiagaraComponent *Niagara =
+                           Cast<UNiagaraComponent>(Comp)) {
+              Niagara->SetComponentTickEnabled(true);
+              Niagara->SetVisibility(true);
+              Niagara->Activate();
+            } else if (UWidgetComponent *Widget =
+                           Cast<UWidgetComponent>(Comp)) {
+              Widget->SetVisibility(true);
+              Widget->SetComponentTickEnabled(true);
+            } else if (UGroomComponent *Hair = Cast<UGroomComponent>(Comp)) {
+              Hair->SetVisibility(true);
+              Hair->Activate();
+            } else if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
+              Mesh->SetSimulatePhysics(true);
+              Mesh->SetComponentTickEnabled(true);
+            } else {
+              Comp->SetComponentTickEnabled(true);
+              Comp->Activate(true);
+            }
+          }
+          SuppressedComponents.Remove(Comp);
+        }
+
+        if (MatchedRule->ComponentTickIntervalHigh > 0.0f ||
+            MatchedRule->ComponentTickIntervalLow > 0.0f) {
+          float ActiveTick = FMath::Lerp(MatchedRule->ComponentTickIntervalHigh,
+                                         MatchedRule->ComponentTickIntervalLow,
+                                         1.0f - Significance);
+          ActiveTick = FMath::Clamp(ActiveTick * QualityMultiplier,
+                                    MinTickClamp, MaxTickClamp);
+          Comp->SetComponentTickInterval(ActiveTick);
+          Comp->SetComponentTickEnabled(true);
+        }
       }
     }
   }
@@ -652,6 +681,11 @@ void UDAI_PerfMngrComponent::SetSignificanceThreshold(float NewThreshold) {
 // Setter: change the overall performance mode.
 void UDAI_PerfMngrComponent::SetPerformanceMode(EPerformanceMode NewMode) {
   PerformanceMode = NewMode;
+}
+
+void UDAI_PerfMngrComponent::SetPerformanceQuality(
+    EPerformanceQuality NewQuality) {
+  PerformanceQuality = NewQuality;
 }
 
 // Networking boilerplate (currently default behavior).
