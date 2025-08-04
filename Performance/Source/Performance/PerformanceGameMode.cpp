@@ -1,15 +1,12 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #include "PerformanceGameMode.h"
 #include "PerformanceCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 
 APerformanceGameMode::APerformanceGameMode()
 {
-	// set default pawn class to our Blueprinted character
         static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/ThirdPerson/Blueprints/BP_ThirdPersonCharacter"));
         if (PlayerPawnBPClass.Class != nullptr)
         {
-                DefaultPawnClass = PlayerPawnBPClass.Class;
+                DefaultPawnClass = PlayerPawnBPClass.Class; // use blueprint character as player
         }
 }
