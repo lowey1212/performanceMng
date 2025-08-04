@@ -194,6 +194,21 @@ void UDAI_ProxyHISMManager::RemoveInstanceAtTransform(FName Tag, const FTransfor
             TagToHISM.Remove(Tag);
         }
     }
+
+    // Also remove any pending queued instances at this transform to prevent duplicates
+    if (TArray<FTransform>* Queue = PendingBatchedAdds.Find(Tag))
+    {
+        Queue->RemoveAll([
+            &Transform
+        ](const FTransform& Existing)
+        {
+            return Existing.GetLocation().Equals(Transform.GetLocation(), 1.0f);
+        });
+        if (Queue->Num() == 0)
+        {
+            PendingBatchedAdds.Remove(Tag);
+        }
+    }
 }
 
 void UDAI_ProxyHISMManager::RemoveInstanceByIndex(FName Tag, int32 Index)
@@ -205,7 +220,25 @@ void UDAI_ProxyHISMManager::RemoveInstanceByIndex(FName Tag, int32 Index)
     {
         if (Index >= 0 && Index < HISM->GetInstanceCount())
         {
+            // Cache transform so we can remove any pending queued add
+            FTransform InstTransform;
+            HISM->GetInstanceTransform(Index, InstTransform, true);
+
             HISM->RemoveInstance(Index);
+
+            if (TArray<FTransform>* Queue = PendingBatchedAdds.Find(Tag))
+            {
+                Queue->RemoveAll([
+                    &InstTransform
+                ](const FTransform& Existing)
+                {
+                    return Existing.GetLocation().Equals(InstTransform.GetLocation(), 1.0f);
+                });
+                if (Queue->Num() == 0)
+                {
+                    PendingBatchedAdds.Remove(Tag);
+                }
+            }
         }
     }
 }
