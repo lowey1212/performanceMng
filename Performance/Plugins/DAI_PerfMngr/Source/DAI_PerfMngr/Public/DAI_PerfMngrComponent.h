@@ -43,6 +43,7 @@ enum class ESuppressionComponentType : uint8 {
   MotionWarping,
   Hair,
   Physics,
+  Camera,
   CustomTag
 };
 
@@ -97,6 +98,13 @@ struct FComponentSuppressionRule {
                     ToolTip = "Tick interval when component is barely "
                               "significant but above suppression threshold."))
   float ComponentTickIntervalLow = 0.0f;
+
+#if WITH_EDITORONLY_DATA
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
+            meta = (ToolTip =
+                        "If true, prints the component's tick interval to the screen for debugging. Editor only."))
+  bool bPrintTickRate = false;
+#endif
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnProxyEnteredSignature);
