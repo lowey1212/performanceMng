@@ -569,40 +569,51 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
       bool bShouldSuppress = Significance < MatchedRule->SuppressionThreshold;
 
       if (bShouldSuppress) {
-        if (!SuppressedComponents.Contains(Comp)) {
-          if (MatchedRule->ComponentTickInterval > 0.0f) {
-            float SuppTick = FMath::Clamp(MatchedRule->ComponentTickInterval *
-                                              QualityMultiplier,
-                                          MinTickClamp, MaxTickClamp);
-            Comp->SetComponentTickInterval(SuppTick);
-            Comp->SetComponentTickEnabled(true);
-          } else {
-            Comp->SetComponentTickEnabled(false);
+        if (MatchedRule->ComponentTickInterval > 0.0f) {
+          // When suppressed but still ticking, dynamically blend between the
+          // suppressed tick interval and the "low" interval as significance
+          // approaches the suppression threshold.
+          const float Range = MatchedRule->SuppressionThreshold;
+          const float Normalized = Range > KINDA_SMALL_NUMBER
+                                       ? FMath::Clamp(Significance / Range, 0.0f,
+                                                      1.0f)
+                                       : 1.0f;
+          float SuppTick = FMath::Lerp(MatchedRule->ComponentTickInterval,
+                                       MatchedRule->ComponentTickIntervalLow,
+                                       Normalized);
+          SuppTick =
+              FMath::Clamp(SuppTick * QualityMultiplier, MinTickClamp, MaxTickClamp);
+          Comp->SetComponentTickInterval(SuppTick);
+          Comp->SetComponentTickEnabled(true);
+          SuppressedComponents.Add(Comp, *MatchedRule);
+        } else if (!SuppressedComponents.Contains(Comp)) {
+          Comp->SetComponentTickEnabled(false);
 
-            if (UAudioComponent *Audio = Cast<UAudioComponent>(Comp)) {
-              Audio->Stop();
-              Audio->SetActive(false);
-            } else if (ULightComponent *Light = Cast<ULightComponent>(Comp)) {
-              Light->SetVisibility(false);
-              Light->SetActive(false);
-            } else if (UNiagaraComponent *Niagara =
-                           Cast<UNiagaraComponent>(Comp)) {
-              Niagara->DeactivateImmediate();
-              Niagara->SetVisibility(false);
-            } else if (UWidgetComponent *Widget =
-                           Cast<UWidgetComponent>(Comp)) {
-              Widget->SetVisibility(false);
-              Widget->SetComponentTickEnabled(false);
-            } else if (UGroomComponent *Hair = Cast<UGroomComponent>(Comp)) {
-              Hair->SetVisibility(false);
-              Hair->Deactivate();
-            } else if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
-              Mesh->SetSimulatePhysics(false);
-            } else {
-              Comp->Deactivate();
-            }
+          if (UAudioComponent *Audio = Cast<UAudioComponent>(Comp)) {
+            Audio->Stop();
+            Audio->SetActive(false);
+          } else if (ULightComponent *Light = Cast<ULightComponent>(Comp)) {
+            Light->SetVisibility(false);
+            Light->SetActive(false);
+          } else if (UNiagaraComponent *Niagara =
+                         Cast<UNiagaraComponent>(Comp)) {
+            Niagara->DeactivateImmediate();
+            Niagara->SetVisibility(false);
+          } else if (UWidgetComponent *Widget =
+                         Cast<UWidgetComponent>(Comp)) {
+            Widget->SetVisibility(false);
+            Widget->SetComponentTickEnabled(false);
+          } else if (UGroomComponent *Hair = Cast<UGroomComponent>(Comp)) {
+            Hair->SetVisibility(false);
+            Hair->Deactivate();
+          } else if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
+            Mesh->SetSimulatePhysics(false);
+          } else {
+            Comp->Deactivate();
           }
           SuppressedComponents.Add(Comp, *MatchedRule);
+        } else {
+          // Already suppressed and disabled; nothing else to do.
         }
       } else {
         if (SuppressedComponents.Contains(Comp)) {
