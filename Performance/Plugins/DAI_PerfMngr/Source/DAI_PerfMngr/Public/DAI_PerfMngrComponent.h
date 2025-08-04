@@ -24,10 +24,10 @@ class AAIController;
  */
 UENUM(BlueprintType)
 enum class EProxySwapState : uint8 {
-    Active,
-    PendingSwapToProxy,
-    ProxyActive,
-    PendingSwapToFull
+  Active,
+  PendingSwapToProxy,
+  ProxyActive,
+  PendingSwapToFull
 };
 
 UENUM(BlueprintType)
@@ -35,418 +35,495 @@ enum class EPerformanceMode : uint8 { Auto, Full, Proxy };
 
 UENUM(BlueprintType)
 enum class ESuppressionComponentType : uint8 {
-    Audio,
-    Niagara,
-    AbilitySystem,
-    Light,
-    Widget,
-    MotionWarping,
-    Hair,
-    Physics,
-    CustomTag
+  Audio,
+  Niagara,
+  AbilitySystem,
+  Light,
+  Widget,
+  MotionWarping,
+  Hair,
+  Physics,
+  CustomTag
 };
 
+UENUM(BlueprintType)
+enum class EPerformanceQuality : uint8 { High, Medium, Low };
+
 /**
- * @brief Rule describing which component(s) can be suppressed as significance drops.
+ * @brief Rule describing which component(s) can be suppressed as significance
+ * drops.
  */
 USTRUCT(BlueprintType)
 struct FComponentSuppressionRule {
-    GENERATED_BODY()
+  GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
-        meta = (ToolTip = "Type of component to match for suppression."))
-    ESuppressionComponentType ComponentType = ESuppressionComponentType::Audio;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
+            meta = (ToolTip = "Type of component to match for suppression."))
+  ESuppressionComponentType ComponentType = ESuppressionComponentType::Audio;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
-        meta = (ToolTip = "Optional component tag that must be present to match."))
-    FName ComponentTagFilter;
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "Suppression",
+      meta =
+          (ToolTip = "Optional component tag that must be present to match."))
+  FName ComponentTagFilter;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
-        meta = (ToolTip = "Substring that component name must contain to match."))
-    FString NameContains;
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "Suppression",
+      meta = (ToolTip = "Substring that component name must contain to match."))
+  FString NameContains;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
-        meta = (ClampMin = "0.0", ClampMax = "1.0",
-            ToolTip = "Significance value below which the component will be disabled."))
-    float SuppressionThreshold = 0.5f;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
+            meta = (ClampMin = "0.0", ClampMax = "1.0",
+                    ToolTip = "Significance value below which the component "
+                              "will be disabled."))
+  float SuppressionThreshold = 0.5f;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
-        meta = (ClampMin = "0.0",
-            ToolTip = "Tick interval to apply while suppressed (0 disables the component)."))
-    float ComponentTickInterval = 0.0f;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
+            meta = (ClampMin = "0.0",
+                    ToolTip = "Tick interval to apply while suppressed (0 "
+                              "disables the component)."))
+  float ComponentTickInterval = 0.0f;
+
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "Suppression",
+      meta =
+          (ClampMin = "0.0",
+           ToolTip =
+               "Tick interval when component is highly significant (active)."))
+  float ComponentTickIntervalHigh = 0.0f;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
+            meta = (ClampMin = "0.0",
+                    ToolTip = "Tick interval when component is barely "
+                              "significant but above suppression threshold."))
+  float ComponentTickIntervalLow = 0.0f;
 };
-
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnProxyEnteredSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnProxyExitedSignature);
 
 /**
- * @brief Main Performance Manager component. Add this to actors you want to auto-optimize.
+ * @brief Main Performance Manager component. Add this to actors you want to
+ * auto-optimize.
  */
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class DAI_PERFMNGR_API UDAI_PerfMngrComponent : public UActorComponent {
-    GENERATED_BODY()
+  GENERATED_BODY()
 
 public:
-    UDAI_PerfMngrComponent();
+  UDAI_PerfMngrComponent();
 
-    // Component overrides...
-    virtual void BeginPlay() override;
-    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-    virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
-    virtual void
-        TickComponent(float DeltaTime, enum ELevelTick TickType,
-            FActorComponentTickFunction* ThisTickFunction) override;
-    virtual void GetLifetimeReplicatedProps(
-        TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+  // Component overrides...
+  virtual void BeginPlay() override;
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+  virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
+  virtual void
+  TickComponent(float DeltaTime, enum ELevelTick TickType,
+                FActorComponentTickFunction *ThisTickFunction) override;
+  virtual void GetLifetimeReplicatedProps(
+      TArray<FLifetimeProperty> &OutLifetimeProps) const override;
 
-    // Proxy management
+  // Proxy management
 
-    /** Swap to the proxy (cheap) representation when safe to do so. */
-    UFUNCTION(BlueprintCallable, Category = "PerfMngr|Proxy", meta = (ToolTip = "Swap to the proxy (cheap) version of this actor when safe to do so."))
+  /** Swap to the proxy (cheap) representation when safe to do so. */
+  UFUNCTION(BlueprintCallable, Category = "PerfMngr|Proxy",
+            meta = (ToolTip = "Swap to the proxy (cheap) version of this actor "
+                              "when safe to do so."))
 
-    void SwapToProxy();
+  void SwapToProxy();
 
-    /** Swap back to the full (high‑quality) representation when safe to do so. */
-    UFUNCTION(BlueprintCallable, Category = "PerfMngr|Proxy", meta = (ToolTip = "Swap back to the full (high‑quality) version of this actor when safe to do so."))
-    void SwapToFull();
+  /** Swap back to the full (high‑quality) representation when safe to do so. */
+  UFUNCTION(BlueprintCallable, Category = "PerfMngr|Proxy",
+            meta = (ToolTip = "Swap back to the full (high‑quality) version of "
+                              "this actor when safe to do so."))
+  void SwapToFull();
 
-    /** Is the actor currently using a proxy? */
-    UFUNCTION(BlueprintCallable, Category = "PerfMngr|Proxy",
-        meta = (ToolTip = "Returns true if the actor is currently using a proxy representation."))
-    bool IsUsingProxy() const;
+  /** Is the actor currently using a proxy? */
+  UFUNCTION(BlueprintCallable, Category = "PerfMngr|Proxy",
+            meta = (ToolTip = "Returns true if the actor is currently using a "
+                              "proxy representation."))
+  bool IsUsingProxy() const;
 
-    /** What is the current proxy swap state? */
-    UFUNCTION(BlueprintCallable, Category = "PerfMngr|Proxy",
-        meta = (ToolTip = "Gets the current proxy swap state (Active,ProxyActive, or pending states)."))
-    EProxySwapState GetCurrentProxyState() const;
+  /** What is the current proxy swap state? */
+  UFUNCTION(BlueprintCallable, Category = "PerfMngr|Proxy",
+            meta = (ToolTip = "Gets the current proxy swap state "
+                              "(Active,ProxyActive, or pending states)."))
+  EProxySwapState GetCurrentProxyState() const;
 
-    /** Force an immediate swap to proxy (skips delays/safety checks). */
-    UFUNCTION(BlueprintCallable, Category = "PerfMngr|Proxy",
-        meta = (ToolTip = "Forces an immediate switch to the proxy version (ignores normal delays/safety checks)."))
-    void ForceSwapToProxy();
+  /** Force an immediate swap to proxy (skips delays/safety checks). */
+  UFUNCTION(BlueprintCallable, Category = "PerfMngr|Proxy",
+            meta = (ToolTip = "Forces an immediate switch to the proxy version "
+                              "(ignores normal delays/safety checks)."))
+  void ForceSwapToProxy();
 
-    /** Force an immediate swap to full (skips delays/safety checks). */
-    UFUNCTION(BlueprintCallable, Category = "PerfMngr|Proxy",
-        meta = (ToolTip = "Forces an immediate switch back to the full version (ignores normal delays/safety checks)."))
-    void ForceSwapToFull();
+  /** Force an immediate swap to full (skips delays/safety checks). */
+  UFUNCTION(BlueprintCallable, Category = "PerfMngr|Proxy",
+            meta = (ToolTip = "Forces an immediate switch back to the full "
+                              "version (ignores normal delays/safety checks)."))
+  void ForceSwapToFull();
 
-    // Configurables
+  /** Set overall performance quality (High/Medium/Low). */
+  UFUNCTION(
+      BlueprintCallable, Category = "PerfMngr",
+      meta =
+          (ToolTip = "Change global performance quality affecting tick rates."))
+  void SetPerformanceQuality(EPerformanceQuality NewQuality);
 
-    /** Max distance at which this actor is considered for full quality. Beyond
-     * this we prefer proxy/billboard. */
-    UPROPERTY(
-        EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
-        meta = (ClampMin = "0.0",
-            ToolTip = "How far from the player this actor can be before we prefer cheaper representations (proxies/billboards)."))
-    float MaxDistance = 5000.0f;
+  // Configurables
 
-    /** How often (seconds) to evaluate significance & state. Higher values =
-     * fewer checks. */
-    UPROPERTY(
-        EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
-        meta =
-        (ClampMin = "0.01",
-            ToolTip = "How often (in seconds) to re-evaluate significance and choose proxy/full state. Higher = less CPU overhead."))
-    float TickEvaluationRate = 1.0f;
+  /** Max distance at which this actor is considered for full quality. Beyond
+   * this we prefer proxy/billboard. */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
+      meta = (ClampMin = "0.0",
+              ToolTip = "How far from the player this actor can be before we "
+                        "prefer cheaper representations (proxies/billboards)."))
+  float MaxDistance = 5000.0f;
 
-    /** Fast tick when close/important (seconds between ticks). */
-    UPROPERTY(
-        EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
-        meta =
-        (ClampMin = "0.0",
-            ToolTip = "Tick interval to use when the actor is close or important (smaller = more updates, smoother behavior)."))
-    float TickIntervalHigh = 0.02f;
+  /** How often (seconds) to evaluate significance & state. Higher values =
+   * fewer checks. */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
+      meta =
+          (ClampMin = "0.01",
+           ToolTip = "How often (in seconds) to re-evaluate significance and "
+                     "choose proxy/full state. Higher = less CPU overhead."))
+  float TickEvaluationRate = 1.0f;
 
-    /** Slow tick when far/unimportant (seconds between ticks). */
-    UPROPERTY(
-        EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
-        meta = (ClampMin = "0.0",
-            ToolTip = "Tick interval to use when the actor is far or unimportant (larger = fewer updates, better performance)."))
-    float TickIntervalLow = 0.2f;
+  /** Fast tick when close/important (seconds between ticks). */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
+      meta =
+          (ClampMin = "0.0",
+           ToolTip = "Tick interval to use when the actor is close or "
+                     "important (smaller = more updates, smoother behavior)."))
+  float TickIntervalHigh = 0.02f;
 
-    /** Lower bound on tick interval clamping applied by this component. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
-        meta = (ClampMin = "0.0",
-            ToolTip = "Minimum allowed tick interval after clamping."))
-    float MinTickClamp = 0.01f;
+  /** Slow tick when far/unimportant (seconds between ticks). */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
+      meta = (ClampMin = "0.0",
+              ToolTip =
+                  "Tick interval to use when the actor is far or unimportant "
+                  "(larger = fewer updates, better performance)."))
+  float TickIntervalLow = 0.2f;
 
-    /** Upper bound on tick interval clamping applied by this component. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
-        meta = (ClampMin = "0.0",
-            ToolTip = "Maximum allowed tick interval after clamping."))
-    float MaxTickClamp = 1.0f;
+  /** Global performance quality setting. Medium/Low increase tick intervals. */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
+      meta =
+          (ToolTip =
+               "Overall performance quality setting controlling tick scaling."))
+  EPerformanceQuality PerformanceQuality = EPerformanceQuality::High;
 
-    /** If true, also slow down the owner’s Ability System tick when
-     * insignificant. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
-        meta = (ToolTip = "Also throttle the owner’s Ability System Component tick when significance is low."))
-    bool bAffectAbilitySystemTick = false;
+  /** Lower bound on tick interval clamping applied by this component. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
+            meta = (ClampMin = "0.0",
+                    ToolTip = "Minimum allowed tick interval after clamping."))
+  float MinTickClamp = 0.01f;
 
-    /** Enable detailed logging to the Output Log. */
-    UPROPERTY(
-        EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Debug",
-        meta = (ToolTip = "Print detailed debug information to the Output Log."))
-    bool bEnableDebugLog = false;
+  /** Upper bound on tick interval clamping applied by this component. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
+            meta = (ClampMin = "0.0",
+                    ToolTip = "Maximum allowed tick interval after clamping."))
+  float MaxTickClamp = 1.0f;
 
-    /** Print the current significance to screen each evaluation. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Debug",
-        meta = (ToolTip = "Draw the actor’s current significance value on screen each time it’s evaluated."))
-    bool bPrintSignificanceToScreen = false;
+  /** If true, also slow down the owner’s Ability System tick when
+   * insignificant. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
+            meta = (ToolTip = "Also throttle the owner’s Ability System "
+                              "Component tick when significance is low."))
+  bool bAffectAbilitySystemTick = false;
 
-    /** Draw a debug sphere showing the proxy swap radius. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Debug",
-        meta = (ToolTip = "Draw a sphere in the world to visualize the proxy/billboard swap radius."))
-    bool bDrawDebugProxySphere = false;
+  /** Enable detailed logging to the Output Log. */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Debug",
+      meta = (ToolTip = "Print detailed debug information to the Output Log."))
+  bool bEnableDebugLog = false;
 
-    /** How long to keep the debug sphere visible. */
-    UPROPERTY(
-        EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Debug",
-        meta =
-        (ClampMin = "0.0",
-            ToolTip =
-            "How long (seconds) the debug sphere should remain on screen."))
-    float ProxyDebugSphereDuration = 2.0f;
+  /** Print the current significance to screen each evaluation. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Debug",
+            meta = (ToolTip = "Draw the actor’s current significance value on "
+                              "screen each time it’s evaluated."))
+  bool bPrintSignificanceToScreen = false;
 
-    /** Static mesh to use for the general proxy (cheap stand‑in) when enabled. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
-        meta = (ToolTip = "Mesh used as the actor’s cheap proxy representation when in proxy mode."))
-    UStaticMesh* ProxyStaticMesh = nullptr;
+  /** Draw a debug sphere showing the proxy swap radius. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Debug",
+            meta = (ToolTip = "Draw a sphere in the world to visualize the "
+                              "proxy/billboard swap radius."))
+  bool bDrawDebugProxySphere = false;
 
-    /**
-     * Mesh used when swapping the owner's hair for a proxy representation.
-     * Only spawned in proxy mode; hidden when leaving proxy.
-     */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Hair",
-        meta = (ToolTip = "Optional mesh to display as a cheap hair stand‑in while in proxy mode."))
-    UStaticMesh* ProxyHairMesh = nullptr;
+  /** How long to keep the debug sphere visible. */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Debug",
+      meta =
+          (ClampMin = "0.0",
+           ToolTip =
+               "How long (seconds) the debug sphere should remain on screen."))
+  float ProxyDebugSphereDuration = 2.0f;
 
-    /**
-     * Mesh used for billboard proxies when significance is very low.
-     * Added through HISM batching if enabled, otherwise spawned as a unique
-     * component.
-     */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite,
-        Category = "PerfMngr|Proxy|Billboard",
-        meta = (ToolTip = "Billboard mesh used when significance is very low. Can be batched via HISM for large crowds."))
-    UStaticMesh* ProxyBillboardMesh = nullptr;
+  /** Static mesh to use for the general proxy (cheap stand‑in) when enabled. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
+            meta = (ToolTip = "Mesh used as the actor’s cheap proxy "
+                              "representation when in proxy mode."))
+  UStaticMesh *ProxyStaticMesh = nullptr;
 
-    /** Niagara system used as a particle‑only proxy at very low significance. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite,
-        Category = "PerfMngr|Proxy|Particle",
-        meta = (ToolTip = "Niagara effect to show when using a particle-only proxy representation."))
-    class UNiagaraSystem* ProxyParticleEffect = nullptr;
+  /**
+   * Mesh used when swapping the owner's hair for a proxy representation.
+   * Only spawned in proxy mode; hidden when leaving proxy.
+   */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Hair",
+            meta = (ToolTip = "Optional mesh to display as a cheap hair "
+                              "stand‑in while in proxy mode."))
+  UStaticMesh *ProxyHairMesh = nullptr;
 
-    /**
-     * Material used to fade between proxy and billboard during swaps.
-     * Must contain a scalar parameter named "FadeAlpha".
-     */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite,
-        Category = "PerfMngr|Proxy|Billboard",
-        meta = (ToolTip = "Material with a 'FadeAlpha' parameter used to cross-fade between proxy and billboard."))
-    class UMaterialInterface* BillboardFadeMaterial = nullptr;
+  /**
+   * Mesh used for billboard proxies when significance is very low.
+   * Added through HISM batching if enabled, otherwise spawned as a unique
+   * component.
+   */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite,
+            Category = "PerfMngr|Proxy|Billboard",
+            meta = (ToolTip = "Billboard mesh used when significance is very "
+                              "low. Can be batched via HISM for large crowds."))
+  UStaticMesh *ProxyBillboardMesh = nullptr;
 
-    /** Duration (seconds) for billboard fade. 0 = instant swap. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite,
-        Category = "PerfMngr|Proxy|Billboard",
-        meta = (ClampMin = 0.0f,
-            ToolTip = "How long to cross-fade (in seconds) between proxy mesh and billboard. 0 = instant."))
-    float BillboardFadeDuration = 0.2f;
+  /** Niagara system used as a particle‑only proxy at very low significance. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite,
+            Category = "PerfMngr|Proxy|Particle",
+            meta = (ToolTip = "Niagara effect to show when using a "
+                              "particle-only proxy representation."))
+  class UNiagaraSystem *ProxyParticleEffect = nullptr;
 
-    /** Tag applied to billboard proxies for filtering or selection. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite,
-        Category = "PerfMngr|Proxy|Billboard",
-        meta = (ToolTip = "Component tag added to billboard proxy meshes (useful for filtering in gameplay logic)."))
-    FName BillboardProxyTag = "Proxy_Billboard";
+  /**
+   * Material used to fade between proxy and billboard during swaps.
+   * Must contain a scalar parameter named "FadeAlpha".
+   */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite,
+            Category = "PerfMngr|Proxy|Billboard",
+            meta = (ToolTip = "Material with a 'FadeAlpha' parameter used to "
+                              "cross-fade between proxy and billboard."))
+  class UMaterialInterface *BillboardFadeMaterial = nullptr;
 
-    /** Enter billboard mode below this significance. */
-    UPROPERTY(
-        EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Billboard",
-        meta = (ClampMin = "0.0", ClampMax = "1.0",
-            ToolTip = "When significance is below this, show the billboard proxy."))
-    float BillboardEnterThreshold = 0.15f;
+  /** Duration (seconds) for billboard fade. 0 = instant swap. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite,
+            Category = "PerfMngr|Proxy|Billboard",
+            meta = (ClampMin = 0.0f,
+                    ToolTip = "How long to cross-fade (in seconds) between "
+                              "proxy mesh and billboard. 0 = instant."))
+  float BillboardFadeDuration = 0.2f;
 
-    /** Leave billboard mode above this significance. */
-    UPROPERTY(
-        EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Billboard",
-        meta =
-        (ClampMin = "0.0", ClampMax = "1.0",
-            ToolTip = "When significance rises above this, hide the billboard proxy."))
-    float BillboardExitThreshold = 0.25f;
+  /** Tag applied to billboard proxies for filtering or selection. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite,
+            Category = "PerfMngr|Proxy|Billboard",
+            meta = (ToolTip = "Component tag added to billboard proxy meshes "
+                              "(useful for filtering in gameplay logic)."))
+  FName BillboardProxyTag = "Proxy_Billboard";
 
-    /** Tag applied to particle proxies for filtering or selection. */
-    UPROPERTY(
-        EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Particle",
-        meta = (ToolTip = "Component tag added to particle proxy components (useful for filtering in gameplay logic)."))
-    FName ParticleProxyTag = "Proxy_Particle";
+  /** Enter billboard mode below this significance. */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Billboard",
+      meta = (ClampMin = "0.0", ClampMax = "1.0",
+              ToolTip =
+                  "When significance is below this, show the billboard proxy."))
+  float BillboardEnterThreshold = 0.15f;
 
-    /** Enter particle proxy mode below this significance. */
-    UPROPERTY(
-        EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Particle",
-        meta = (ClampMin = "0.0", ClampMax = "1.0",
-            ToolTip ="When significance is below this, show the particle proxy."))
-    float ParticleEnterThreshold = 0.1f;
+  /** Leave billboard mode above this significance. */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Billboard",
+      meta =
+          (ClampMin = "0.0", ClampMax = "1.0",
+           ToolTip =
+               "When significance rises above this, hide the billboard proxy."))
+  float BillboardExitThreshold = 0.25f;
 
-    /** Leave particle proxy mode above this significance. */
-    UPROPERTY(
-        EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Particle",
-        meta =
-        (ClampMin = "0.0", ClampMax = "1.0",
-            ToolTip ="When significance rises above this, hide the particle proxy."))
-    float ParticleExitThreshold = 0.2f;
+  /** Tag applied to particle proxies for filtering or selection. */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Particle",
+      meta = (ToolTip = "Component tag added to particle proxy components "
+                        "(useful for filtering in gameplay logic)."))
+  FName ParticleProxyTag = "Proxy_Particle";
 
-    /** Optional tag added to any spawned hair proxy mesh for easy identification.
-     */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Hair",
-        meta = (ToolTip = "Optional tag assigned to hair proxy meshes so you can find/manipulate them later."))
-    FName HairProxyTag = "Proxy_Hair";
+  /** Enter particle proxy mode below this significance. */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Particle",
+      meta = (ClampMin = "0.0", ClampMax = "1.0",
+              ToolTip =
+                  "When significance is below this, show the particle proxy."))
+  float ParticleEnterThreshold = 0.1f;
 
-    /** Optional category label for grouping in significance logic. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
-        meta = (ToolTip = "Optional category name used by significance systems to group similar actors."))
-    FName Category;
+  /** Leave particle proxy mode above this significance. */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Particle",
+      meta =
+          (ClampMin = "0.0", ClampMax = "1.0",
+           ToolTip =
+               "When significance rises above this, hide the particle proxy."))
+  float ParticleExitThreshold = 0.2f;
 
-    /** If true, tint meshes by significance value for easy visual debugging. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
-        meta = (ToolTip = "Colorize meshes by their significance value (debug/visualization)."))
-    bool bColorizeBySignificance = false;
+  /** Optional tag added to any spawned hair proxy mesh for easy identification.
+   */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy|Hair",
+            meta = (ToolTip = "Optional tag assigned to hair proxy meshes so "
+                              "you can find/manipulate them later."))
+  FName HairProxyTag = "Proxy_Hair";
 
-    /** Rules that decide which components to temporarily turn off at low
-     * significance. */
-    UPROPERTY(
-        EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Suppression",
-        meta = (ToolTip = "List of suppression rules. Each rule can turn off a type of component when significance is low."))
-    TArray<FComponentSuppressionRule> ComponentSuppressionRules;
+  /** Optional category label for grouping in significance logic. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
+            meta = (ToolTip = "Optional category name used by significance "
+                              "systems to group similar actors."))
+  FName Category;
 
-    /** Enter proxy mode below this significance. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
-        meta = (ClampMin = "0.0", ClampMax = "1.0",
-            ToolTip = "When significance is below this, swap to the proxy representation."))
-    float ProxyEnterThreshold = 0.2f;
+  /** If true, tint meshes by significance value for easy visual debugging. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
+            meta = (ToolTip = "Colorize meshes by their significance value "
+                              "(debug/visualization)."))
+  bool bColorizeBySignificance = false;
 
-    /** Return to full mode above this significance. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
-        meta = (ClampMin = "0.0", ClampMax = "1.0",
-            ToolTip = "When significance rises above this, swap back to full representation."))
-    float ProxyExitThreshold = 0.3f;
+  /** Rules that decide which components to temporarily turn off at low
+   * significance. */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Suppression",
+      meta = (ToolTip = "List of suppression rules. Each rule can turn off a "
+                        "type of component when significance is low."))
+  TArray<FComponentSuppressionRule> ComponentSuppressionRules;
 
-    /** Delay between detecting a threshold and performing the visual swap
-     * (seconds). */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
-        meta = (ClampMin = "0.0",
-            ToolTip = "Grace period before a swap actually happens. Helps avoid flicker when value bounces around."))
-    float ProxySwapDelay = 0.2f;
+  /** Enter proxy mode below this significance. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
+            meta = (ClampMin = "0.0", ClampMax = "1.0",
+                    ToolTip = "When significance is below this, swap to the "
+                              "proxy representation."))
+  float ProxyEnterThreshold = 0.2f;
 
-    // HISM batching settings (always enabled)
+  /** Return to full mode above this significance. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
+            meta = (ClampMin = "0.0", ClampMax = "1.0",
+                    ToolTip = "When significance rises above this, swap back "
+                              "to full representation."))
+  float ProxyExitThreshold = 0.3f;
 
-    /** How many instances to add to each HISM per tick. Lower to reduce hitching;
-     * raise to fill faster. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
-        meta = (ClampMin = 1, ClampMax = 1000, UIMin = 1, UIMax = 200,
-            ToolTip = "Number of proxy instances to add to each HISM per tick (throttles mass adds)."))
-    int32 ProxyBatchAddSize = 50;
+  /** Delay between detecting a threshold and performing the visual swap
+   * (seconds). */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
+            meta = (ClampMin = "0.0",
+                    ToolTip = "Grace period before a swap actually happens. "
+                              "Helps avoid flicker when value bounces around."))
+  float ProxySwapDelay = 0.2f;
 
-    // AI suppression
+  // HISM batching settings (always enabled)
 
-    /** If true, allows AI to be slowed or paused when actor is not significant.
-     */
-    UPROPERTY(
-        EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|AI",
-        meta = (ToolTip = "Allow AI logic (BT/Perception/etc.) to be throttled when this actor is far away and not important."))
-    bool bAllowAIThrottling = true;
+  /** How many instances to add to each HISM per tick. Lower to reduce hitching;
+   * raise to fill faster. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
+            meta = (ClampMin = 1, ClampMax = 1000, UIMin = 1, UIMax = 200,
+                    ToolTip = "Number of proxy instances to add to each HISM "
+                              "per tick (throttles mass adds)."))
+  int32 ProxyBatchAddSize = 50;
 
-    /** Below this significance, put AI into a deep sleep to save CPU. */
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|AI",
-        meta = (EditCondition = "bAllowAIThrottling", ClampMin = 0.0,
-            ClampMax = 1.0,
-            ToolTip = "When significance is below this, heavily throttle or pause AI."))
-    float AIDeepFreezeSignificance = 0.05f;
+  // AI suppression
 
-    // — Runtime/Transient state (not exposed) —
-    bool bHasHISMInstance = false;
-    FName ProxyHISMTag;
-    FTransform ProxyHISMTransform;
+  /** If true, allows AI to be slowed or paused when actor is not significant.
+   */
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|AI",
+      meta = (ToolTip = "Allow AI logic (BT/Perception/etc.) to be throttled "
+                        "when this actor is far away and not important."))
+  bool bAllowAIThrottling = true;
 
-    // Proxy components created at runtime
-    UPROPERTY(Transient) UStaticMeshComponent* ProxyMeshComponent = nullptr;
-    UPROPERTY(Transient) UStaticMeshComponent* ProxyHairMeshComponent = nullptr;
-    UPROPERTY(Transient) UStaticMeshComponent* BillboardMeshComponent = nullptr;
-    UPROPERTY(Transient) UNiagaraComponent* ProxyEffectComponent = nullptr;
+  /** Below this significance, put AI into a deep sleep to save CPU. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|AI",
+            meta = (EditCondition = "bAllowAIThrottling", ClampMin = 0.0,
+                    ClampMax = 1.0,
+                    ToolTip = "When significance is below this, heavily "
+                              "throttle or pause AI."))
+  float AIDeepFreezeSignificance = 0.05f;
 
-    // Events (Blueprint assignable)
-    UPROPERTY(BlueprintAssignable,
-        meta = (ToolTip = "Event fired when the actor enters proxy mode."))
-    FOnProxyEnteredSignature OnProxyEntered;
-    UPROPERTY(
-        BlueprintAssignable,
-        meta =
-        (ToolTip = "Event fired when the actor exits proxy mode (back to full)."))
-    FOnProxyExitedSignature OnProxyExited;
+  // — Runtime/Transient state (not exposed) —
+  bool bHasHISMInstance = false;
+  FName ProxyHISMTag;
+  FTransform ProxyHISMTransform;
+
+  // Proxy components created at runtime
+  UPROPERTY(Transient) UStaticMeshComponent *ProxyMeshComponent = nullptr;
+  UPROPERTY(Transient) UStaticMeshComponent *ProxyHairMeshComponent = nullptr;
+  UPROPERTY(Transient) UStaticMeshComponent *BillboardMeshComponent = nullptr;
+  UPROPERTY(Transient) UNiagaraComponent *ProxyEffectComponent = nullptr;
+
+  // Events (Blueprint assignable)
+  UPROPERTY(BlueprintAssignable,
+            meta = (ToolTip = "Event fired when the actor enters proxy mode."))
+  FOnProxyEnteredSignature OnProxyEntered;
+  UPROPERTY(
+      BlueprintAssignable,
+      meta =
+          (ToolTip =
+               "Event fired when the actor exits proxy mode (back to full)."))
+  FOnProxyExitedSignature OnProxyExited;
 
 protected:
-    /** Cached previous significance from last evaluation. */
-    float PreviousSignificance = 1.0f;
+  /** Cached previous significance from last evaluation. */
+  float PreviousSignificance = 1.0f;
 
-    // Billboard and Particle proxy state tracking
-    EProxySwapState BillboardState = EProxySwapState::Active;
-    EProxySwapState ParticleState = EProxySwapState::Active;
-    float BillboardTimeInCurrentState = 0.0f;
-    float ParticleTimeInCurrentState = 0.0f;
+  // Billboard and Particle proxy state tracking
+  EProxySwapState BillboardState = EProxySwapState::Active;
+  EProxySwapState ParticleState = EProxySwapState::Active;
+  float BillboardTimeInCurrentState = 0.0f;
+  float ParticleTimeInCurrentState = 0.0f;
 
-    FTimerHandle TickEvalTimerHandle;
-    EProxySwapState ProxyState = EProxySwapState::Active;
-    float ProxyTimeInCurrentState = 0.0f;
-    float LastSignificance = 1.0f;
+  FTimerHandle TickEvalTimerHandle;
+  EProxySwapState ProxyState = EProxySwapState::Active;
+  float ProxyTimeInCurrentState = 0.0f;
+  float LastSignificance = 1.0f;
 
-    /** Components currently suppressed and their rules (for restoring later). */
-    TMap<UActorComponent*, FComponentSuppressionRule> SuppressedComponents;
+  /** Components currently suppressed and their rules (for restoring later). */
+  TMap<UActorComponent *, FComponentSuppressionRule> SuppressedComponents;
 
-    /** Dynamic materials we created while fading proxies/billboards, per mesh
-     * component. */
-    TMap<UMeshComponent*, TArray<UMaterialInstanceDynamic*>> CachedDynamicMats;
+  /** Dynamic materials we created while fading proxies/billboards, per mesh
+   * component. */
+  TMap<UMeshComponent *, TArray<UMaterialInstanceDynamic *>> CachedDynamicMats;
 
-    /** Cached pointer to the owner's Ability System (if any). */
-    UAbilitySystemComponent* CachedASC = nullptr;
+  /** Cached pointer to the owner's Ability System (if any). */
+  UAbilitySystemComponent *CachedASC = nullptr;
 
-    /** Only replicate state changes when significance crosses this threshold. */
-    float ReplicationSignificanceThreshold = 0.25f;
+  /** Only replicate state changes when significance crosses this threshold. */
+  float ReplicationSignificanceThreshold = 0.25f;
 
-    /** Current performance mode (Auto/Full/Proxy). */
-    EPerformanceMode PerformanceMode = EPerformanceMode::Auto;
+  /** Current performance mode (Auto/Full/Proxy). */
+  EPerformanceMode PerformanceMode = EPerformanceMode::Auto;
 
-    // Billboard fade support: dynamic material instances for proxy and billboard
-    // meshes
+  // Billboard fade support: dynamic material instances for proxy and billboard
+  // meshes
 
-    /** Dynamic MIs used when fading out the proxy mesh during a billboard swap.
-     */
-    TArray<UMaterialInstanceDynamic*> ProxyFadeMaterials;
+  /** Dynamic MIs used when fading out the proxy mesh during a billboard swap.
+   */
+  TArray<UMaterialInstanceDynamic *> ProxyFadeMaterials;
 
-    /** Dynamic MIs used when fading in the billboard mesh during a billboard
-     * swap. */
-    TArray<UMaterialInstanceDynamic*> BillboardFadeMaterials;
+  /** Dynamic MIs used when fading in the billboard mesh during a billboard
+   * swap. */
+  TArray<UMaterialInstanceDynamic *> BillboardFadeMaterials;
 
-    /** True while a billboard fade is in progress (prevents re-initialisation).
-     */
-    bool bBillboardFadeActive = false;
+  /** True while a billboard fade is in progress (prevents re-initialisation).
+   */
+  bool bBillboardFadeActive = false;
 
-    // Helpers (internal use)
-    /** Handles switching between full, proxy and billboard modes over time. */
-    void HandleProxySwap(float DeltaTime, float Significance);
-    /** Optional color tint for debug based on significance value. */
-    void ApplyColorBySignificance(float Significance);
-    /** Adjusts component and optional ASC tick intervals based on significance.
-     */
-    void UpdateTickBasedOnSignificance();
-    /** Sets how often to evaluate significance. */
-    void SetTickEvaluationRate(float NewRate);
-    /** Sets a global significance threshold for this actor (advanced). */
-    void SetSignificanceThreshold(float NewThreshold);
-    /** Set performance mode (Auto/Full/Proxy). */
-    void SetPerformanceMode(EPerformanceMode NewMode);
-    /** Handles billboard enter/exit (and fade) based on significance. */
-    void HandleBillboardProxySwap(float DeltaTime, float Significance);
-    /** Handles particle proxy enter/exit based on significance. */
-    void HandleParticleProxySwap(float DeltaTime, float Significance);
-    /** Ensures only one visual representation is active at any time. */
-    void EnsureSingleRepresentation();
+  // Helpers (internal use)
+  /** Handles switching between full, proxy and billboard modes over time. */
+  void HandleProxySwap(float DeltaTime, float Significance);
+  /** Optional color tint for debug based on significance value. */
+  void ApplyColorBySignificance(float Significance);
+  /** Adjusts component and optional ASC tick intervals based on significance.
+   */
+  void UpdateTickBasedOnSignificance();
+  /** Sets how often to evaluate significance. */
+  void SetTickEvaluationRate(float NewRate);
+  /** Sets a global significance threshold for this actor (advanced). */
+  void SetSignificanceThreshold(float NewThreshold);
+  /** Set performance mode (Auto/Full/Proxy). */
+  void SetPerformanceMode(EPerformanceMode NewMode);
+  /** Handles billboard enter/exit (and fade) based on significance. */
+  void HandleBillboardProxySwap(float DeltaTime, float Significance);
+  /** Handles particle proxy enter/exit based on significance. */
+  void HandleParticleProxySwap(float DeltaTime, float Significance);
+  /** Ensures only one visual representation is active at any time. */
+  void EnsureSingleRepresentation();
 };
