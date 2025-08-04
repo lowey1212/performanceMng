@@ -653,21 +653,11 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
 
         if (MatchedRule->ComponentTickIntervalHigh > 0.0f ||
             MatchedRule->ComponentTickIntervalLow > 0.0f) {
-          // Map the current significance into the 0-1 range relative to the
-          // suppression threshold so that components just above the threshold
-          // tick slowly and ramp up as they become more significant.
-          const float Range = 1.0f - MatchedRule->SuppressionThreshold;
-          const float Normalized = Range > KINDA_SMALL_NUMBER
-                                       ? FMath::Clamp(
-                                             (Significance -
-                                              MatchedRule->SuppressionThreshold) /
-                                                 Range,
-                                             0.0f, 1.0f)
-                                       : 1.0f;
-
-          float ActiveTick = FMath::Lerp(MatchedRule->ComponentTickIntervalLow,
-                                         MatchedRule->ComponentTickIntervalHigh,
-                                         Normalized);
+          // Directly map significance into a high/low tick interval range so
+          // components smoothly transition between fast and slow ticking.
+          float ActiveTick = FMath::Lerp(
+              MatchedRule->ComponentTickIntervalHigh,
+              MatchedRule->ComponentTickIntervalLow, 1.0f - Significance);
           ActiveTick = FMath::Clamp(ActiveTick * QualityMultiplier,
                                     MinTickClamp, MaxTickClamp);
           Comp->SetComponentTickInterval(ActiveTick);
