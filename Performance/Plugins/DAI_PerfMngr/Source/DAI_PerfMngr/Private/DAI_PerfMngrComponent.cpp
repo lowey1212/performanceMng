@@ -504,10 +504,10 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
       bool bShouldSuppress = false;
       FComponentSuppressionRule MatchedRule;
       for (const FComponentSuppressionRule &Rule : ComponentSuppressionRules) {
-        if (Significance >= Rule.SuppressBelowSignificance)
+          if (Significance >= Rule.SuppressionThreshold)
           continue;
-        bool TagMatch = !Rule.ComponentTag.IsNone() &&
-                        Comp->ComponentHasTag(Rule.ComponentTag);
+        bool TagMatch = !Rule.ComponentTagFilter.IsNone() &&
+              Comp->ComponentHasTag(Rule.ComponentTagFilter);
         bool NameMatch = !Rule.NameContains.IsEmpty() &&
                          Comp->GetName().Contains(Rule.NameContains);
 
@@ -525,13 +525,15 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
           bShouldSuppress = Comp->IsA<ULightComponent>();
           break;
         case ESuppressionComponentType::Widget:
-          bShouldSuppress =
-              Comp->IsA<UWidgetComponent>() &&
-              (TagMatch || NameMatch || Rule.ComponentTag.IsNone());
-          break;
+            bShouldSuppress =
+                Comp->IsA<UWidgetComponent>() &&
+                (TagMatch || NameMatch || Rule.ComponentTagFilter.IsNone());
+            break;
         case ESuppressionComponentType::MotionWarping:
-          bShouldSuppress = NameMatch || TagMatch ||
-                            Comp->GetName().Contains(TEXT("MotionWarp"));
+            bShouldSuppress = NameMatch || TagMatch ||
+                Comp->GetName().Contains(TEXT("MotionWarp"));
+            break;
+
           break;
         case ESuppressionComponentType::Hair:
           bShouldSuppress = Comp->IsA<UGroomComponent>() || NameMatch ||
@@ -540,11 +542,13 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
                             Comp->GetName().Contains(TEXT("Hair"));
           break;
         case ESuppressionComponentType::Physics:
-          if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
-            Mesh->SetSimulatePhysics(false);
-          }
-          bShouldSuppress = true;
-          break;
+            if (UMeshComponent* Mesh = Cast<UMeshComponent>(Comp)) {
+                (void)Mesh->SetSimulatePhysics(false);  // ✅ Discard return value cleanly
+            }
+
+            bShouldSuppress = true;
+            break;
+
         case ESuppressionComponentType::CustomTag:
           bShouldSuppress = TagMatch;
           break;
