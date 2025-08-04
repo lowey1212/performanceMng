@@ -1,5 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #include "PerformanceCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
@@ -11,121 +9,89 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 
-DEFINE_LOG_CATEGORY(LogTemplateCharacter);
-
-//////////////////////////////////////////////////////////////////////////
-// APerformanceCharacter
+DEFINE_LOG_CATEGORY(LogPerformanceCharacter);
 
 APerformanceCharacter::APerformanceCharacter()
 {
-	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
-		
-	// Don't rotate when the controller rotates. Let that just affect the camera.
-	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
-	bUseControllerRotationRoll = false;
+        GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f); // size of the player collider
 
-	// Configure character movement
-	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
-	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f); // ...at this rotation rate
+        bUseControllerRotationPitch = false;
+        bUseControllerRotationYaw = false;
+        bUseControllerRotationRoll = false;
 
-	// Note: For faster iteration times these variables, and many more, can be tweaked in the Character Blueprint
-	// instead of recompiling to adjust them
-	GetCharacterMovement()->JumpZVelocity = 700.f;
-	GetCharacterMovement()->AirControl = 0.35f;
-	GetCharacterMovement()->MaxWalkSpeed = 500.f;
-	GetCharacterMovement()->MinAnalogWalkSpeed = 20.f;
-	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
-	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
+        GetCharacterMovement()->bOrientRotationToMovement = true; // face movement direction
+        GetCharacterMovement()->RotationRate = FRotator(0.f, 500.f, 0.f); // turning speed
+        GetCharacterMovement()->JumpZVelocity = 700.f; // jump strength
+        GetCharacterMovement()->AirControl = 0.35f; // steering in air
+        GetCharacterMovement()->MaxWalkSpeed = 500.f; // walking speed
+        GetCharacterMovement()->MinAnalogWalkSpeed = 20.f; // slowest stick walk
+        GetCharacterMovement()->BrakingDecelerationWalking = 2000.f; // ground stop speed
+        GetCharacterMovement()->BrakingDecelerationFalling = 1500.f; // air stop speed
 
-	// Create a camera boom (pulls in towards the player if there is a collision)
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.0f; // The camera follows at this distance behind the character	
-	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+        CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom")); // camera arm
+        CameraBoom->SetupAttachment(RootComponent);
+        CameraBoom->TargetArmLength = 400.f; // camera distance
+        CameraBoom->bUsePawnControlRotation = true; // rotate with controller
 
-	// Create a follow camera
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
-	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
-
-	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
-	// are set in the derived blueprint asset named ThirdPersonCharacter (to avoid direct content references in C++)
+        FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera")); // main camera
+        FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+        FollowCamera->bUsePawnControlRotation = false; // camera rotates with arm
 }
-
-//////////////////////////////////////////////////////////////////////////
-// Input
-
 void APerformanceCharacter::NotifyControllerChanged()
 {
 	Super::NotifyControllerChanged();
 
-	// Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
-		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
-		}
-	}
+        if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+        {
+                if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+                {
+                        Subsystem->AddMappingContext(DefaultMappingContext, 0); // enable our input mappings
+                }
+        }
 }
 
 void APerformanceCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
         Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-        // Set up action bindings
         if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
         {
-                // Jumping
-                EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-                EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-
-                // Moving
-                EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APerformanceCharacter::Move);
-
-                // Looking
-                EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APerformanceCharacter::Look);
+                EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump); // start jump
+                EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping); // stop jump
+                EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &APerformanceCharacter::Move); // move
+                EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &APerformanceCharacter::Look); // look
         }
         else
         {
-                UE_LOG(LogTemplateCharacter, Error, TEXT("'%s' Failed to find an Enhanced Input component! This template is built to use the Enhanced Input system. If you intend to use the legacy system, then you will need to update this C++ file."), *GetNameSafe(this));
-                return;
+                UE_LOG(LogPerformanceCharacter, Error, TEXT("'%s' needs an Enhanced Input component."), *GetNameSafe(this));
         }
 }
 
 void APerformanceCharacter::Move(const FInputActionValue& Value)
 {
-        // input is a Vector2D
-        const FVector2D MovementVector = Value.Get<FVector2D>();
+        const FVector2D MovementVector = Value.Get<FVector2D>(); // read input
 
         if (Controller != nullptr)
         {
-                // find out which way is forward
                 const FRotator Rotation = Controller->GetControlRotation();
                 const FRotator YawRotation(0, Rotation.Yaw, 0);
 
-                // build rotation matrix once and derive direction vectors
                 const FRotationMatrix RotationMatrix(YawRotation);
                 const FVector ForwardDirection = RotationMatrix.GetUnitAxis(EAxis::X);
                 const FVector RightDirection = RotationMatrix.GetUnitAxis(EAxis::Y);
 
-                // add movement
-                AddMovementInput(ForwardDirection, MovementVector.Y);
-                AddMovementInput(RightDirection, MovementVector.X);
+                AddMovementInput(ForwardDirection, MovementVector.Y); // forward/back
+                AddMovementInput(RightDirection, MovementVector.X); // left/right
         }
 }
 
 void APerformanceCharacter::Look(const FInputActionValue& Value)
 {
-	// input is a Vector2D
-	FVector2D LookAxisVector = Value.Get<FVector2D>();
+        FVector2D LookAxisVector = Value.Get<FVector2D>(); // read input
 
-	if (Controller != nullptr)
-	{
-		// add yaw and pitch input to controller
-		AddControllerYawInput(LookAxisVector.X);
-		AddControllerPitchInput(LookAxisVector.Y);
-	}
+        if (Controller != nullptr)
+        {
+                AddControllerYawInput(LookAxisVector.X); // turn
+                AddControllerPitchInput(LookAxisVector.Y); // look up/down
+        }
 }
