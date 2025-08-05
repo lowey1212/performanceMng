@@ -577,17 +577,23 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
 
       if (bShouldSuppress) {
         if (MatchedRule->ComponentTickInterval > 0.0f) {
-          // When suppressed but still ticking, dynamically blend between the
-          // suppressed tick interval and the "low" interval as significance
-          // approaches the suppression threshold.
-          const float Range = MatchedRule->SuppressionThreshold;
-          const float Normalized =
-              Range > KINDA_SMALL_NUMBER
-                  ? FMath::Clamp(Significance / Range, 0.0f, 1.0f)
-                  : 1.0f;
-          float SuppTick =
-              FMath::Lerp(MatchedRule->ComponentTickInterval,
-                          MatchedRule->ComponentTickIntervalLow, Normalized);
+          float SuppTick = MatchedRule->ComponentTickInterval;
+
+          if (MatchedRule->ComponentType !=
+              ESuppressionComponentType::Niagara) {
+            // When suppressed but still ticking, dynamically blend between the
+            // suppressed tick interval and the "low" interval as significance
+            // approaches the suppression threshold.
+            const float Range = MatchedRule->SuppressionThreshold;
+            const float Normalized =
+                Range > KINDA_SMALL_NUMBER
+                    ? FMath::Clamp(Significance / Range, 0.0f, 1.0f)
+                    : 1.0f;
+            SuppTick = FMath::Lerp(MatchedRule->ComponentTickInterval,
+                                   MatchedRule->ComponentTickIntervalLow,
+                                   Normalized);
+          }
+
           SuppTick = FMath::Clamp(SuppTick * QualityMultiplier, MinTickClamp,
                                   MaxTickClamp);
           Comp->SetComponentTickInterval(SuppTick);
@@ -661,8 +667,10 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
           SuppressedComponents.Remove(Comp);
         }
 
-        if (MatchedRule->ComponentTickIntervalHigh > 0.0f ||
-            MatchedRule->ComponentTickIntervalLow > 0.0f) {
+        if (MatchedRule->ComponentType !=
+                ESuppressionComponentType::Niagara &&
+            (MatchedRule->ComponentTickIntervalHigh > 0.0f ||
+             MatchedRule->ComponentTickIntervalLow > 0.0f)) {
           // Directly map significance into a high/low tick interval range so
           // components smoothly transition between fast and slow ticking.
           float ActiveTick = FMath::Lerp(MatchedRule->ComponentTickIntervalHigh,
@@ -678,7 +686,9 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
 #if WITH_EDITOR
       if (GEngine) {
         const uint64 DebugKey = reinterpret_cast<uint64>(Comp);
-        if (MatchedRule->bPrintTickRate) {
+        if (MatchedRule->ComponentType !=
+                ESuppressionComponentType::Niagara &&
+            MatchedRule->bPrintTickRate) {
           const float CurrentTick = Comp->GetComponentTickInterval();
           GEngine->AddOnScreenDebugMessage(
               DebugKey, TickEvaluationRate, FColor::Green,
