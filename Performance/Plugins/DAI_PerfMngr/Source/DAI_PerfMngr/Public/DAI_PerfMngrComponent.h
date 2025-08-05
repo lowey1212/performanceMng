@@ -87,17 +87,23 @@ struct FComponentSuppressionRule {
       EditAnywhere, BlueprintReadWrite, Category = "Suppression",
       meta =
           (ClampMin = "0.0",
-           ToolTip = "Tick interval when component is highly significant (active)."))
+           ToolTip = "Tick interval when component is highly significant (active).",
+           EditCondition = "ComponentType != ESuppressionComponentType::Niagara",
+           EditConditionHides))
   float ComponentTickIntervalHigh = 0.0f;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
             meta = (ClampMin = "0.0",
-                    ToolTip = "Tick interval when component is barely significant but above suppression threshold."))
+                    ToolTip = "Tick interval when component is barely significant but above suppression threshold.",
+                    EditCondition = "ComponentType != ESuppressionComponentType::Niagara",
+                    EditConditionHides))
   float ComponentTickIntervalLow = 0.0f;
 
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
-            meta = (ToolTip ="If true, prints the component's tick interval to the screen for debugging. Editor only."))
+            meta = (ToolTip ="If true, prints the component's tick interval to the screen for debugging. Editor only.",
+                    EditCondition = "ComponentType != ESuppressionComponentType::Niagara",
+                    EditConditionHides))
   bool bPrintTickRate = false;
 
 
