@@ -9,28 +9,30 @@
 #include "UObject/ScriptMacros.h"
 
 PRAGMA_DISABLE_DEPRECATION_WARNINGS
+enum class EPerformanceQuality : uint8;
 enum class EProxySwapState : uint8;
 #ifdef DAI_PERFMNGR_DAI_PerfMngrComponent_generated_h
 #error "DAI_PerfMngrComponent.generated.h already included, missing '#pragma once' in DAI_PerfMngrComponent.h"
 #endif
 #define DAI_PERFMNGR_DAI_PerfMngrComponent_generated_h
 
-#define FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_81_GENERATED_BODY \
+#define FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_54_GENERATED_BODY \
 	friend struct Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics; \
 	DAI_PERFMNGR_API static class UScriptStruct* StaticStruct();
 
 
 template<> DAI_PERFMNGR_API UScriptStruct* StaticStruct<struct FComponentSuppressionRule>();
 
-#define FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_100_DELEGATE \
+#define FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_104_DELEGATE \
 DAI_PERFMNGR_API void FOnProxyEnteredSignature_DelegateWrapper(const FMulticastScriptDelegate& OnProxyEnteredSignature);
 
 
-#define FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_101_DELEGATE \
+#define FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_105_DELEGATE \
 DAI_PERFMNGR_API void FOnProxyExitedSignature_DelegateWrapper(const FMulticastScriptDelegate& OnProxyExitedSignature);
 
 
-#define FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_112_RPC_WRAPPERS_NO_PURE_DECLS \
+#define FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_113_RPC_WRAPPERS_NO_PURE_DECLS \
+	DECLARE_FUNCTION(execSetPerformanceQuality); \
 	DECLARE_FUNCTION(execForceSwapToFull); \
 	DECLARE_FUNCTION(execForceSwapToProxy); \
 	DECLARE_FUNCTION(execGetCurrentProxyState); \
@@ -39,7 +41,7 @@ DAI_PERFMNGR_API void FOnProxyExitedSignature_DelegateWrapper(const FMulticastSc
 	DECLARE_FUNCTION(execSwapToProxy);
 
 
-#define FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_112_INCLASS_NO_PURE_DECLS \
+#define FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_113_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesUDAI_PerfMngrComponent(); \
 	friend struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics; \
@@ -48,7 +50,7 @@ public: \
 	DECLARE_SERIALIZER(UDAI_PerfMngrComponent)
 
 
-#define FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_112_ENHANCED_CONSTRUCTORS \
+#define FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_113_ENHANCED_CONSTRUCTORS \
 private: \
 	/** Private move- and copy-constructors, should never be used */ \
 	UDAI_PerfMngrComponent(UDAI_PerfMngrComponent&&); \
@@ -60,13 +62,13 @@ public: \
 	NO_API virtual ~UDAI_PerfMngrComponent();
 
 
-#define FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_109_PROLOG
-#define FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_112_GENERATED_BODY \
+#define FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_111_PROLOG
+#define FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_113_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_112_RPC_WRAPPERS_NO_PURE_DECLS \
-	FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_112_INCLASS_NO_PURE_DECLS \
-	FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_112_ENHANCED_CONSTRUCTORS \
+	FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_113_RPC_WRAPPERS_NO_PURE_DECLS \
+	FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_113_INCLASS_NO_PURE_DECLS \
+	FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_113_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
@@ -74,7 +76,7 @@ PRAGMA_ENABLE_DEPRECATION_WARNINGS
 template<> DAI_PERFMNGR_API UClass* StaticClass<class UDAI_PerfMngrComponent>();
 
 #undef CURRENT_FILE_ID
-#define CURRENT_FILE_ID FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h
+#define CURRENT_FILE_ID FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h
 
 
 #define FOREACH_ENUM_EPROXYSWAPSTATE(op) \
@@ -105,10 +107,20 @@ template<> DAI_PERFMNGR_API UEnum* StaticEnum<EPerformanceMode>();
 	op(ESuppressionComponentType::MotionWarping) \
 	op(ESuppressionComponentType::Hair) \
 	op(ESuppressionComponentType::Physics) \
+	op(ESuppressionComponentType::Camera) \
 	op(ESuppressionComponentType::CustomTag) 
 
 enum class ESuppressionComponentType : uint8;
 template<> struct TIsUEnumClass<ESuppressionComponentType> { enum { Value = true }; };
 template<> DAI_PERFMNGR_API UEnum* StaticEnum<ESuppressionComponentType>();
+
+#define FOREACH_ENUM_EPERFORMANCEQUALITY(op) \
+	op(EPerformanceQuality::High) \
+	op(EPerformanceQuality::Medium) \
+	op(EPerformanceQuality::Low) 
+
+enum class EPerformanceQuality : uint8;
+template<> struct TIsUEnumClass<EPerformanceQuality> { enum { Value = true }; };
+template<> DAI_PERFMNGR_API UEnum* StaticEnum<EPerformanceQuality>();
 
 PRAGMA_ENABLE_DEPRECATION_WARNINGS

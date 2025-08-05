@@ -13,6 +13,7 @@ void EmptyLinkFunctionForGeneratedCodeDAI_PerfMngrComponent() {}
 DAI_PERFMNGR_API UClass* Z_Construct_UClass_UDAI_PerfMngrComponent();
 DAI_PERFMNGR_API UClass* Z_Construct_UClass_UDAI_PerfMngrComponent_NoRegister();
 DAI_PERFMNGR_API UEnum* Z_Construct_UEnum_DAI_PerfMngr_EPerformanceMode();
+DAI_PERFMNGR_API UEnum* Z_Construct_UEnum_DAI_PerfMngr_EPerformanceQuality();
 DAI_PERFMNGR_API UEnum* Z_Construct_UEnum_DAI_PerfMngr_EProxySwapState();
 DAI_PERFMNGR_API UEnum* Z_Construct_UEnum_DAI_PerfMngr_ESuppressionComponentType();
 DAI_PERFMNGR_API UFunction* Z_Construct_UDelegateFunction_DAI_PerfMngr_OnProxyEnteredSignature__DelegateSignature();
@@ -45,25 +46,17 @@ struct Z_Construct_UEnum_DAI_PerfMngr_EProxySwapState_Statics
 {
 #if WITH_METADATA
 	static constexpr UECodeGen_Private::FMetaDataPairParam Enum_MetaDataParams[] = {
-		{ "Active.Comment", "/** Full, high\xe2\x80\x91quality representation is active. */" },
 		{ "Active.Name", "EProxySwapState::Active" },
-		{ "Active.ToolTip", "Full, high\xe2\x80\x91quality representation is active." },
 		{ "BlueprintType", "true" },
 #if !UE_BUILD_SHIPPING
-		{ "Comment", "/**\n * @brief Component that automatically swaps an actor between \"full\" and \"proxy\" representations\n * based on how important (significant) the actor is to the player (usually how close it is).\n *\n * In plain English: this speeds things up by showing cheap stand\xe2\x80\x91ins (proxies) for far\xe2\x80\x91""away actors\n * and the full, expensive version when the actor is close enough to matter.\n */" },
+		{ "Comment", "/**\n * @brief Component that automatically swaps an actor between \"full\" and \"proxy\"\n * representations based on how important (significant) the actor is to the\n * player (usually how close it is).\n */" },
 #endif
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
-		{ "PendingSwapToFull.Comment", "/** Returning from proxy to full representation, swap is pending. */" },
 		{ "PendingSwapToFull.Name", "EProxySwapState::PendingSwapToFull" },
-		{ "PendingSwapToFull.ToolTip", "Returning from proxy to full representation, swap is pending." },
-		{ "PendingSwapToProxy.Comment", "/** A proxy is about to be used, swap is pending. */" },
 		{ "PendingSwapToProxy.Name", "EProxySwapState::PendingSwapToProxy" },
-		{ "PendingSwapToProxy.ToolTip", "A proxy is about to be used, swap is pending." },
-		{ "ProxyActive.Comment", "/** Proxy (cheap stand\xe2\x80\x91in) is currently active. */" },
 		{ "ProxyActive.Name", "EProxySwapState::ProxyActive" },
-		{ "ProxyActive.ToolTip", "Proxy (cheap stand\xe2\x80\x91in) is currently active." },
 #if !UE_BUILD_SHIPPING
-		{ "ToolTip", "@brief Component that automatically swaps an actor between \"full\" and \"proxy\" representations\nbased on how important (significant) the actor is to the player (usually how close it is).\n\nIn plain English: this speeds things up by showing cheap stand\xe2\x80\x91ins (proxies) for far\xe2\x80\x91""away actors\nand the full, expensive version when the actor is close enough to matter." },
+		{ "ToolTip", "@brief Component that automatically swaps an actor between \"full\" and \"proxy\"\nrepresentations based on how important (significant) the actor is to the\nplayer (usually how close it is)." },
 #endif
 	};
 #endif // WITH_METADATA
@@ -117,15 +110,9 @@ struct Z_Construct_UEnum_DAI_PerfMngr_EPerformanceMode_Statics
 	static constexpr UECodeGen_Private::FMetaDataPairParam Enum_MetaDataParams[] = {
 		{ "Auto.Name", "EPerformanceMode::Auto" },
 		{ "BlueprintType", "true" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/**\n * @brief How the component should decide what to show.\n * Auto = pick for me. Full = always full quality. Proxy = always proxy.\n */" },
-#endif
 		{ "Full.Name", "EPerformanceMode::Full" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 		{ "Proxy.Name", "EPerformanceMode::Proxy" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "@brief How the component should decide what to show.\nAuto = pick for me. Full = always full quality. Proxy = always proxy." },
-#endif
 	};
 #endif // WITH_METADATA
 	static constexpr UECodeGen_Private::FEnumeratorParam Enumerators[] = {
@@ -178,9 +165,7 @@ struct Z_Construct_UEnum_DAI_PerfMngr_ESuppressionComponentType_Statics
 		{ "AbilitySystem.Name", "ESuppressionComponentType::AbilitySystem" },
 		{ "Audio.Name", "ESuppressionComponentType::Audio" },
 		{ "BlueprintType", "true" },
-#if !UE_BUILD_SHIPPING
-		{ "Comment", "/**\n * @brief Types of components this system can temporarily turn off (suppress) when the actor\n * is unimportant (low significance).\n *\n * In plain English: what parts can we temporarily mute to save performance.\n */" },
-#endif
+		{ "Camera.Name", "ESuppressionComponentType::Camera" },
 		{ "CustomTag.Name", "ESuppressionComponentType::CustomTag" },
 		{ "Hair.Name", "ESuppressionComponentType::Hair" },
 		{ "Light.Name", "ESuppressionComponentType::Light" },
@@ -188,9 +173,6 @@ struct Z_Construct_UEnum_DAI_PerfMngr_ESuppressionComponentType_Statics
 		{ "MotionWarping.Name", "ESuppressionComponentType::MotionWarping" },
 		{ "Niagara.Name", "ESuppressionComponentType::Niagara" },
 		{ "Physics.Name", "ESuppressionComponentType::Physics" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "@brief Types of components this system can temporarily turn off (suppress) when the actor\nis unimportant (low significance).\n\nIn plain English: what parts can we temporarily mute to save performance." },
-#endif
 		{ "Widget.Name", "ESuppressionComponentType::Widget" },
 	};
 #endif // WITH_METADATA
@@ -203,6 +185,7 @@ struct Z_Construct_UEnum_DAI_PerfMngr_ESuppressionComponentType_Statics
 		{ "ESuppressionComponentType::MotionWarping", (int64)ESuppressionComponentType::MotionWarping },
 		{ "ESuppressionComponentType::Hair", (int64)ESuppressionComponentType::Hair },
 		{ "ESuppressionComponentType::Physics", (int64)ESuppressionComponentType::Physics },
+		{ "ESuppressionComponentType::Camera", (int64)ESuppressionComponentType::Camera },
 		{ "ESuppressionComponentType::CustomTag", (int64)ESuppressionComponentType::CustomTag },
 	};
 	static const UECodeGen_Private::FEnumParams EnumParams;
@@ -229,6 +212,60 @@ UEnum* Z_Construct_UEnum_DAI_PerfMngr_ESuppressionComponentType()
 }
 // End Enum ESuppressionComponentType
 
+// Begin Enum EPerformanceQuality
+static FEnumRegistrationInfo Z_Registration_Info_UEnum_EPerformanceQuality;
+static UEnum* EPerformanceQuality_StaticEnum()
+{
+	if (!Z_Registration_Info_UEnum_EPerformanceQuality.OuterSingleton)
+	{
+		Z_Registration_Info_UEnum_EPerformanceQuality.OuterSingleton = GetStaticEnum(Z_Construct_UEnum_DAI_PerfMngr_EPerformanceQuality, (UObject*)Z_Construct_UPackage__Script_DAI_PerfMngr(), TEXT("EPerformanceQuality"));
+	}
+	return Z_Registration_Info_UEnum_EPerformanceQuality.OuterSingleton;
+}
+template<> DAI_PERFMNGR_API UEnum* StaticEnum<EPerformanceQuality>()
+{
+	return EPerformanceQuality_StaticEnum();
+}
+struct Z_Construct_UEnum_DAI_PerfMngr_EPerformanceQuality_Statics
+{
+#if WITH_METADATA
+	static constexpr UECodeGen_Private::FMetaDataPairParam Enum_MetaDataParams[] = {
+		{ "BlueprintType", "true" },
+		{ "High.Name", "EPerformanceQuality::High" },
+		{ "Low.Name", "EPerformanceQuality::Low" },
+		{ "Medium.Name", "EPerformanceQuality::Medium" },
+		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
+	};
+#endif // WITH_METADATA
+	static constexpr UECodeGen_Private::FEnumeratorParam Enumerators[] = {
+		{ "EPerformanceQuality::High", (int64)EPerformanceQuality::High },
+		{ "EPerformanceQuality::Medium", (int64)EPerformanceQuality::Medium },
+		{ "EPerformanceQuality::Low", (int64)EPerformanceQuality::Low },
+	};
+	static const UECodeGen_Private::FEnumParams EnumParams;
+};
+const UECodeGen_Private::FEnumParams Z_Construct_UEnum_DAI_PerfMngr_EPerformanceQuality_Statics::EnumParams = {
+	(UObject*(*)())Z_Construct_UPackage__Script_DAI_PerfMngr,
+	nullptr,
+	"EPerformanceQuality",
+	"EPerformanceQuality",
+	Z_Construct_UEnum_DAI_PerfMngr_EPerformanceQuality_Statics::Enumerators,
+	RF_Public|RF_Transient|RF_MarkAsNative,
+	UE_ARRAY_COUNT(Z_Construct_UEnum_DAI_PerfMngr_EPerformanceQuality_Statics::Enumerators),
+	EEnumFlags::None,
+	(uint8)UEnum::ECppForm::EnumClass,
+	METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UEnum_DAI_PerfMngr_EPerformanceQuality_Statics::Enum_MetaDataParams), Z_Construct_UEnum_DAI_PerfMngr_EPerformanceQuality_Statics::Enum_MetaDataParams)
+};
+UEnum* Z_Construct_UEnum_DAI_PerfMngr_EPerformanceQuality()
+{
+	if (!Z_Registration_Info_UEnum_EPerformanceQuality.InnerSingleton)
+	{
+		UECodeGen_Private::ConstructUEnum(Z_Registration_Info_UEnum_EPerformanceQuality.InnerSingleton, Z_Construct_UEnum_DAI_PerfMngr_EPerformanceQuality_Statics::EnumParams);
+	}
+	return Z_Registration_Info_UEnum_EPerformanceQuality.InnerSingleton;
+}
+// End Enum EPerformanceQuality
+
 // Begin ScriptStruct FComponentSuppressionRule
 static FStructRegistrationInfo Z_Registration_Info_UScriptStruct_ComponentSuppressionRule;
 class UScriptStruct* FComponentSuppressionRule::StaticStruct()
@@ -249,49 +286,91 @@ struct Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics
 	static constexpr UECodeGen_Private::FMetaDataPairParam Struct_MetaDataParams[] = {
 		{ "BlueprintType", "true" },
 #if !UE_BUILD_SHIPPING
-		{ "Comment", "/**\n * @brief Rule describing which component(s) can be suppressed as significance drops.\n *\n * Layman\xe2\x80\x99s terms: When the actor is far away (not important), these rules tell the system\n * which bits to switch off and when.\n */" },
+		{ "Comment", "/**\n * @brief Rule describing which component(s) can be suppressed as significance\n * drops.\n */" },
 #endif
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 #if !UE_BUILD_SHIPPING
-		{ "ToolTip", "@brief Rule describing which component(s) can be suppressed as significance drops.\n\nLayman\xe2\x80\x99s terms: When the actor is far away (not important), these rules tell the system\nwhich bits to switch off and when." },
+		{ "ToolTip", "@brief Rule describing which component(s) can be suppressed as significance\ndrops." },
 #endif
 	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ComponentType_MetaData[] = {
 		{ "Category", "Suppression" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 #if !UE_BUILD_SHIPPING
-		{ "ToolTip", "What type of component this rule affects (e.g., Audio, Niagara, Hair)." },
+		{ "ToolTip", "Type of component to match for suppression." },
 #endif
 	};
-	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ComponentTag_MetaData[] = {
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ComponentTagFilter_MetaData[] = {
 		{ "Category", "Suppression" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 #if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Optional filter: only components with this tag are affected. Leave empty to match all of the chosen type." },
+		{ "ToolTip", "Optional component tag that must be present to match." },
 #endif
 	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_NameContains_MetaData[] = {
 		{ "Category", "Suppression" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 #if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Optional filter by name: only components with names containing this text are affected." },
+		{ "ToolTip", "Substring that component name must contain to match." },
 #endif
 	};
-	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_SuppressBelowSignificance_MetaData[] = {
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_SuppressionThreshold_MetaData[] = {
 		{ "Category", "Suppression" },
 		{ "ClampMax", "1.0" },
 		{ "ClampMin", "0.0" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 #if !UE_BUILD_SHIPPING
-		{ "ToolTip", "When the actor\xe2\x80\x99s significance is below this value (0..1), this component gets turned off to save performance." },
+		{ "ToolTip", "Significance value below which the component will be disabled." },
+#endif
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ComponentTickInterval_MetaData[] = {
+		{ "Category", "Suppression" },
+		{ "ClampMin", "0.0" },
+		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Tick interval to apply while suppressed (0 disables the component)." },
+#endif
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ComponentTickIntervalHigh_MetaData[] = {
+		{ "Category", "Suppression" },
+		{ "ClampMin", "0.0" },
+		{ "EditCondition", "ComponentType != ESuppressionComponentType::Niagara" },
+		{ "EditConditionHides", "" },
+		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Tick interval when component is highly significant (active)." },
+#endif
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ComponentTickIntervalLow_MetaData[] = {
+		{ "Category", "Suppression" },
+		{ "ClampMin", "0.0" },
+		{ "EditCondition", "ComponentType != ESuppressionComponentType::Niagara" },
+		{ "EditConditionHides", "" },
+		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Tick interval when component is barely significant but above suppression threshold." },
+#endif
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_bPrintTickRate_MetaData[] = {
+		{ "Category", "Suppression" },
+		{ "EditCondition", "ComponentType != ESuppressionComponentType::Niagara" },
+		{ "EditConditionHides", "" },
+		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "If true, prints the component's tick interval to the screen for debugging. Editor only." },
 #endif
 	};
 #endif // WITH_METADATA
 	static const UECodeGen_Private::FBytePropertyParams NewProp_ComponentType_Underlying;
 	static const UECodeGen_Private::FEnumPropertyParams NewProp_ComponentType;
-	static const UECodeGen_Private::FNamePropertyParams NewProp_ComponentTag;
+	static const UECodeGen_Private::FNamePropertyParams NewProp_ComponentTagFilter;
 	static const UECodeGen_Private::FStrPropertyParams NewProp_NameContains;
-	static const UECodeGen_Private::FFloatPropertyParams NewProp_SuppressBelowSignificance;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_SuppressionThreshold;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_ComponentTickInterval;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_ComponentTickIntervalHigh;
+	static const UECodeGen_Private::FFloatPropertyParams NewProp_ComponentTickIntervalLow;
+	static void NewProp_bPrintTickRate_SetBit(void* Obj);
+	static const UECodeGen_Private::FBoolPropertyParams NewProp_bPrintTickRate;
 	static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
 	static void* NewStructOps()
 	{
@@ -300,16 +379,28 @@ struct Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics
 	static const UECodeGen_Private::FStructParams StructParams;
 };
 const UECodeGen_Private::FBytePropertyParams Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentType_Underlying = { "UnderlyingType", nullptr, (EPropertyFlags)0x0000000000000000, UECodeGen_Private::EPropertyGenFlags::Byte, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, nullptr, METADATA_PARAMS(0, nullptr) };
-const UECodeGen_Private::FEnumPropertyParams Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentType = { "ComponentType", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Enum, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FComponentSuppressionRule, ComponentType), Z_Construct_UEnum_DAI_PerfMngr_ESuppressionComponentType, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ComponentType_MetaData), NewProp_ComponentType_MetaData) }; // 2398797330
-const UECodeGen_Private::FNamePropertyParams Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentTag = { "ComponentTag", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Name, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FComponentSuppressionRule, ComponentTag), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ComponentTag_MetaData), NewProp_ComponentTag_MetaData) };
+const UECodeGen_Private::FEnumPropertyParams Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentType = { "ComponentType", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Enum, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FComponentSuppressionRule, ComponentType), Z_Construct_UEnum_DAI_PerfMngr_ESuppressionComponentType, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ComponentType_MetaData), NewProp_ComponentType_MetaData) }; // 1532735141
+const UECodeGen_Private::FNamePropertyParams Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentTagFilter = { "ComponentTagFilter", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Name, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FComponentSuppressionRule, ComponentTagFilter), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ComponentTagFilter_MetaData), NewProp_ComponentTagFilter_MetaData) };
 const UECodeGen_Private::FStrPropertyParams Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_NameContains = { "NameContains", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Str, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FComponentSuppressionRule, NameContains), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_NameContains_MetaData), NewProp_NameContains_MetaData) };
-const UECodeGen_Private::FFloatPropertyParams Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_SuppressBelowSignificance = { "SuppressBelowSignificance", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FComponentSuppressionRule, SuppressBelowSignificance), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_SuppressBelowSignificance_MetaData), NewProp_SuppressBelowSignificance_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_SuppressionThreshold = { "SuppressionThreshold", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FComponentSuppressionRule, SuppressionThreshold), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_SuppressionThreshold_MetaData), NewProp_SuppressionThreshold_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentTickInterval = { "ComponentTickInterval", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FComponentSuppressionRule, ComponentTickInterval), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ComponentTickInterval_MetaData), NewProp_ComponentTickInterval_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentTickIntervalHigh = { "ComponentTickIntervalHigh", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FComponentSuppressionRule, ComponentTickIntervalHigh), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ComponentTickIntervalHigh_MetaData), NewProp_ComponentTickIntervalHigh_MetaData) };
+const UECodeGen_Private::FFloatPropertyParams Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentTickIntervalLow = { "ComponentTickIntervalLow", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(FComponentSuppressionRule, ComponentTickIntervalLow), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ComponentTickIntervalLow_MetaData), NewProp_ComponentTickIntervalLow_MetaData) };
+void Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_bPrintTickRate_SetBit(void* Obj)
+{
+	((FComponentSuppressionRule*)Obj)->bPrintTickRate = 1;
+}
+const UECodeGen_Private::FBoolPropertyParams Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_bPrintTickRate = { "bPrintTickRate", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(FComponentSuppressionRule), &Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_bPrintTickRate_SetBit, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_bPrintTickRate_MetaData), NewProp_bPrintTickRate_MetaData) };
 const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::PropPointers[] = {
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentType_Underlying,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentType,
-	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentTag,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentTagFilter,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_NameContains,
-	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_SuppressBelowSignificance,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_SuppressionThreshold,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentTickInterval,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentTickIntervalHigh,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_ComponentTickIntervalLow,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewProp_bPrintTickRate,
 };
 static_assert(UE_ARRAY_COUNT(Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::PropPointers) < 2048);
 const UECodeGen_Private::FStructParams Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::StructParams = {
@@ -465,7 +556,7 @@ struct Z_Construct_UFunction_UDAI_PerfMngrComponent_GetCurrentProxyState_Statics
 		{ "Category", "PerfMngr|Proxy" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 #if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Gets the current proxy swap state (Active, ProxyActive, or pending states)." },
+		{ "ToolTip", "Gets the current proxy swap state (Active,ProxyActive, or pending states)." },
 #endif
 	};
 #endif // WITH_METADATA
@@ -475,7 +566,7 @@ struct Z_Construct_UFunction_UDAI_PerfMngrComponent_GetCurrentProxyState_Statics
 	static const UECodeGen_Private::FFunctionParams FuncParams;
 };
 const UECodeGen_Private::FBytePropertyParams Z_Construct_UFunction_UDAI_PerfMngrComponent_GetCurrentProxyState_Statics::NewProp_ReturnValue_Underlying = { "UnderlyingType", nullptr, (EPropertyFlags)0x0000000000000000, UECodeGen_Private::EPropertyGenFlags::Byte, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, nullptr, METADATA_PARAMS(0, nullptr) };
-const UECodeGen_Private::FEnumPropertyParams Z_Construct_UFunction_UDAI_PerfMngrComponent_GetCurrentProxyState_Statics::NewProp_ReturnValue = { "ReturnValue", nullptr, (EPropertyFlags)0x0010000000000580, UECodeGen_Private::EPropertyGenFlags::Enum, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(DAI_PerfMngrComponent_eventGetCurrentProxyState_Parms, ReturnValue), Z_Construct_UEnum_DAI_PerfMngr_EProxySwapState, METADATA_PARAMS(0, nullptr) }; // 1431846166
+const UECodeGen_Private::FEnumPropertyParams Z_Construct_UFunction_UDAI_PerfMngrComponent_GetCurrentProxyState_Statics::NewProp_ReturnValue = { "ReturnValue", nullptr, (EPropertyFlags)0x0010000000000580, UECodeGen_Private::EPropertyGenFlags::Enum, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(DAI_PerfMngrComponent_eventGetCurrentProxyState_Parms, ReturnValue), Z_Construct_UEnum_DAI_PerfMngr_EProxySwapState, METADATA_PARAMS(0, nullptr) }; // 220849448
 const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UFunction_UDAI_PerfMngrComponent_GetCurrentProxyState_Statics::PropPointers[] = {
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_UDAI_PerfMngrComponent_GetCurrentProxyState_Statics::NewProp_ReturnValue_Underlying,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_UDAI_PerfMngrComponent_GetCurrentProxyState_Statics::NewProp_ReturnValue,
@@ -550,6 +641,55 @@ DEFINE_FUNCTION(UDAI_PerfMngrComponent::execIsUsingProxy)
 	P_NATIVE_END;
 }
 // End Class UDAI_PerfMngrComponent Function IsUsingProxy
+
+// Begin Class UDAI_PerfMngrComponent Function SetPerformanceQuality
+struct Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics
+{
+	struct DAI_PerfMngrComponent_eventSetPerformanceQuality_Parms
+	{
+		EPerformanceQuality NewQuality;
+	};
+#if WITH_METADATA
+	static constexpr UECodeGen_Private::FMetaDataPairParam Function_MetaDataParams[] = {
+		{ "Category", "PerfMngr" },
+		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Change global performance quality affecting tick rates." },
+#endif
+	};
+#endif // WITH_METADATA
+	static const UECodeGen_Private::FBytePropertyParams NewProp_NewQuality_Underlying;
+	static const UECodeGen_Private::FEnumPropertyParams NewProp_NewQuality;
+	static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
+	static const UECodeGen_Private::FFunctionParams FuncParams;
+};
+const UECodeGen_Private::FBytePropertyParams Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::NewProp_NewQuality_Underlying = { "UnderlyingType", nullptr, (EPropertyFlags)0x0000000000000000, UECodeGen_Private::EPropertyGenFlags::Byte, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, nullptr, METADATA_PARAMS(0, nullptr) };
+const UECodeGen_Private::FEnumPropertyParams Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::NewProp_NewQuality = { "NewQuality", nullptr, (EPropertyFlags)0x0010000000000080, UECodeGen_Private::EPropertyGenFlags::Enum, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(DAI_PerfMngrComponent_eventSetPerformanceQuality_Parms, NewQuality), Z_Construct_UEnum_DAI_PerfMngr_EPerformanceQuality, METADATA_PARAMS(0, nullptr) }; // 2513431445
+const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::PropPointers[] = {
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::NewProp_NewQuality_Underlying,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::NewProp_NewQuality,
+};
+static_assert(UE_ARRAY_COUNT(Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::PropPointers) < 2048);
+const UECodeGen_Private::FFunctionParams Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::FuncParams = { (UObject*(*)())Z_Construct_UClass_UDAI_PerfMngrComponent, nullptr, "SetPerformanceQuality", nullptr, nullptr, Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::PropPointers, UE_ARRAY_COUNT(Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::PropPointers), sizeof(Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::DAI_PerfMngrComponent_eventSetPerformanceQuality_Parms), RF_Public|RF_Transient|RF_MarkAsNative, (EFunctionFlags)0x04020401, 0, 0, METADATA_PARAMS(UE_ARRAY_COUNT(Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::Function_MetaDataParams), Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::Function_MetaDataParams) };
+static_assert(sizeof(Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::DAI_PerfMngrComponent_eventSetPerformanceQuality_Parms) < MAX_uint16);
+UFunction* Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality()
+{
+	static UFunction* ReturnFunction = nullptr;
+	if (!ReturnFunction)
+	{
+		UECodeGen_Private::ConstructUFunction(&ReturnFunction, Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality_Statics::FuncParams);
+	}
+	return ReturnFunction;
+}
+DEFINE_FUNCTION(UDAI_PerfMngrComponent::execSetPerformanceQuality)
+{
+	P_GET_ENUM(EPerformanceQuality,Z_Param_NewQuality);
+	P_FINISH;
+	P_NATIVE_BEGIN;
+	P_THIS->SetPerformanceQuality(EPerformanceQuality(Z_Param_NewQuality));
+	P_NATIVE_END;
+}
+// End Class UDAI_PerfMngrComponent Function SetPerformanceQuality
 
 // Begin Class UDAI_PerfMngrComponent Function SwapToFull
 struct Z_Construct_UFunction_UDAI_PerfMngrComponent_SwapToFull_Statics
@@ -626,6 +766,7 @@ void UDAI_PerfMngrComponent::StaticRegisterNativesUDAI_PerfMngrComponent()
 		{ "ForceSwapToProxy", &UDAI_PerfMngrComponent::execForceSwapToProxy },
 		{ "GetCurrentProxyState", &UDAI_PerfMngrComponent::execGetCurrentProxyState },
 		{ "IsUsingProxy", &UDAI_PerfMngrComponent::execIsUsingProxy },
+		{ "SetPerformanceQuality", &UDAI_PerfMngrComponent::execSetPerformanceQuality },
 		{ "SwapToFull", &UDAI_PerfMngrComponent::execSwapToFull },
 		{ "SwapToProxy", &UDAI_PerfMngrComponent::execSwapToProxy },
 	};
@@ -643,12 +784,12 @@ struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics
 		{ "BlueprintSpawnableComponent", "" },
 		{ "ClassGroupNames", "Custom" },
 #if !UE_BUILD_SHIPPING
-		{ "Comment", "/**\n * @brief Main Performance Manager component. Add this to actors you want to auto\xe2\x80\x91optimize.\n *\n * It monitors the actor\xe2\x80\x99s distance/importance and swaps meshes/effects to cheaper versions or\n * reduces tick rates to save frame time.\n */" },
+		{ "Comment", "/**\n * @brief Main Performance Manager component. Add this to actors you want to\n * auto-optimize.\n */" },
 #endif
 		{ "IncludePath", "DAI_PerfMngrComponent.h" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 #if !UE_BUILD_SHIPPING
-		{ "ToolTip", "@brief Main Performance Manager component. Add this to actors you want to auto\xe2\x80\x91optimize.\n\nIt monitors the actor\xe2\x80\x99s distance/importance and swaps meshes/effects to cheaper versions or\nreduces tick rates to save frame time." },
+		{ "ToolTip", "@brief Main Performance Manager component. Add this to actors you want to\nauto-optimize." },
 #endif
 	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_MaxDistance_MetaData[] = {
@@ -681,6 +822,13 @@ struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 #if !UE_BUILD_SHIPPING
 		{ "ToolTip", "Tick interval to use when the actor is far or unimportant (larger = fewer updates, better performance)." },
+#endif
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_PerformanceQuality_MetaData[] = {
+		{ "Category", "PerfMngr" },
+		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Overall performance quality setting controlling tick scaling." },
 #endif
 	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_MinTickClamp_MetaData[] = {
@@ -753,7 +901,14 @@ struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics
 		{ "Category", "PerfMngr|Proxy|Billboard" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 #if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Billboard mesh used when significance is very low. Can be batched via HISM for large crowds." },
+		{ "ToolTip", "Billboard mesh used when significance is very low. Only used if no Niagara effect is set. Niagara with a sprite renderer (Face Camera alignment) is preferred." },
+#endif
+	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ProxyBillboardEffect_MetaData[] = {
+		{ "Category", "PerfMngr|Proxy|Billboard" },
+		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
+#if !UE_BUILD_SHIPPING
+		{ "ToolTip", "Niagara effect used for billboard proxies. Preferred method when using a sprite renderer billboard with Face Camera alignment. Only one of this or ProxyBillboardMesh should be set." },
 #endif
 	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ProxyParticleEffect_MetaData[] = {
@@ -882,18 +1037,10 @@ struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics
 		{ "ToolTip", "Grace period before a swap actually happens. Helps avoid flicker when value bounces around." },
 #endif
 	};
-	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_bUseHISMProxyBatching_MetaData[] = {
-		{ "Category", "PerfMngr|Proxy" },
-		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
-#if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Enable Hierarchical Instanced Static Mesh (HISM) batching for proxies to reduce draw calls." },
-#endif
-	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ProxyBatchAddSize_MetaData[] = {
 		{ "Category", "PerfMngr|Proxy" },
 		{ "ClampMax", "1000" },
 		{ "ClampMin", "1" },
-		{ "EditCondition", "bUseHISMProxyBatching" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 #if !UE_BUILD_SHIPPING
 		{ "ToolTip", "Number of proxy instances to add to each HISM per tick (throttles mass adds)." },
@@ -936,6 +1083,10 @@ struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics
 		{ "EditInline", "true" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 	};
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_BillboardEffectComponent_MetaData[] = {
+		{ "EditInline", "true" },
+		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
+	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ProxyEffectComponent_MetaData[] = {
 		{ "EditInline", "true" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
@@ -957,6 +1108,8 @@ struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_TickEvaluationRate;
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_TickIntervalHigh;
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_TickIntervalLow;
+	static const UECodeGen_Private::FBytePropertyParams NewProp_PerformanceQuality_Underlying;
+	static const UECodeGen_Private::FEnumPropertyParams NewProp_PerformanceQuality;
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_MinTickClamp;
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_MaxTickClamp;
 	static void NewProp_bAffectAbilitySystemTick_SetBit(void* Obj);
@@ -971,6 +1124,7 @@ struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics
 	static const UECodeGen_Private::FObjectPropertyParams NewProp_ProxyStaticMesh;
 	static const UECodeGen_Private::FObjectPropertyParams NewProp_ProxyHairMesh;
 	static const UECodeGen_Private::FObjectPropertyParams NewProp_ProxyBillboardMesh;
+	static const UECodeGen_Private::FObjectPropertyParams NewProp_ProxyBillboardEffect;
 	static const UECodeGen_Private::FObjectPropertyParams NewProp_ProxyParticleEffect;
 	static const UECodeGen_Private::FObjectPropertyParams NewProp_BillboardFadeMaterial;
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_BillboardFadeDuration;
@@ -989,8 +1143,6 @@ struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_ProxyEnterThreshold;
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_ProxyExitThreshold;
 	static const UECodeGen_Private::FFloatPropertyParams NewProp_ProxySwapDelay;
-	static void NewProp_bUseHISMProxyBatching_SetBit(void* Obj);
-	static const UECodeGen_Private::FBoolPropertyParams NewProp_bUseHISMProxyBatching;
 	static const UECodeGen_Private::FIntPropertyParams NewProp_ProxyBatchAddSize;
 	static void NewProp_bAllowAIThrottling_SetBit(void* Obj);
 	static const UECodeGen_Private::FBoolPropertyParams NewProp_bAllowAIThrottling;
@@ -998,6 +1150,7 @@ struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics
 	static const UECodeGen_Private::FObjectPropertyParams NewProp_ProxyMeshComponent;
 	static const UECodeGen_Private::FObjectPropertyParams NewProp_ProxyHairMeshComponent;
 	static const UECodeGen_Private::FObjectPropertyParams NewProp_BillboardMeshComponent;
+	static const UECodeGen_Private::FObjectPropertyParams NewProp_BillboardEffectComponent;
 	static const UECodeGen_Private::FObjectPropertyParams NewProp_ProxyEffectComponent;
 	static const UECodeGen_Private::FMulticastDelegatePropertyParams NewProp_OnProxyEntered;
 	static const UECodeGen_Private::FMulticastDelegatePropertyParams NewProp_OnProxyExited;
@@ -1006,8 +1159,9 @@ struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics
 	static constexpr FClassFunctionLinkInfo FuncInfo[] = {
 		{ &Z_Construct_UFunction_UDAI_PerfMngrComponent_ForceSwapToFull, "ForceSwapToFull" }, // 1254889978
 		{ &Z_Construct_UFunction_UDAI_PerfMngrComponent_ForceSwapToProxy, "ForceSwapToProxy" }, // 1561695637
-		{ &Z_Construct_UFunction_UDAI_PerfMngrComponent_GetCurrentProxyState, "GetCurrentProxyState" }, // 2087821262
+		{ &Z_Construct_UFunction_UDAI_PerfMngrComponent_GetCurrentProxyState, "GetCurrentProxyState" }, // 2368760820
 		{ &Z_Construct_UFunction_UDAI_PerfMngrComponent_IsUsingProxy, "IsUsingProxy" }, // 795534363
+		{ &Z_Construct_UFunction_UDAI_PerfMngrComponent_SetPerformanceQuality, "SetPerformanceQuality" }, // 389234775
 		{ &Z_Construct_UFunction_UDAI_PerfMngrComponent_SwapToFull, "SwapToFull" }, // 3178803443
 		{ &Z_Construct_UFunction_UDAI_PerfMngrComponent_SwapToProxy, "SwapToProxy" }, // 424432638
 	};
@@ -1021,6 +1175,8 @@ const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UDAI_PerfMngrCo
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_TickEvaluationRate = { "TickEvaluationRate", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, TickEvaluationRate), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_TickEvaluationRate_MetaData), NewProp_TickEvaluationRate_MetaData) };
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_TickIntervalHigh = { "TickIntervalHigh", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, TickIntervalHigh), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_TickIntervalHigh_MetaData), NewProp_TickIntervalHigh_MetaData) };
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_TickIntervalLow = { "TickIntervalLow", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, TickIntervalLow), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_TickIntervalLow_MetaData), NewProp_TickIntervalLow_MetaData) };
+const UECodeGen_Private::FBytePropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_PerformanceQuality_Underlying = { "UnderlyingType", nullptr, (EPropertyFlags)0x0000000000000000, UECodeGen_Private::EPropertyGenFlags::Byte, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, nullptr, METADATA_PARAMS(0, nullptr) };
+const UECodeGen_Private::FEnumPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_PerformanceQuality = { "PerformanceQuality", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Enum, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, PerformanceQuality), Z_Construct_UEnum_DAI_PerfMngr_EPerformanceQuality, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_PerformanceQuality_MetaData), NewProp_PerformanceQuality_MetaData) }; // 2513431445
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_MinTickClamp = { "MinTickClamp", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, MinTickClamp), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_MinTickClamp_MetaData), NewProp_MinTickClamp_MetaData) };
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_MaxTickClamp = { "MaxTickClamp", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, MaxTickClamp), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_MaxTickClamp_MetaData), NewProp_MaxTickClamp_MetaData) };
 void Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_bAffectAbilitySystemTick_SetBit(void* Obj)
@@ -1047,6 +1203,7 @@ const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UDAI_PerfMngrCo
 const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyStaticMesh = { "ProxyStaticMesh", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyStaticMesh), Z_Construct_UClass_UStaticMesh_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyStaticMesh_MetaData), NewProp_ProxyStaticMesh_MetaData) };
 const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyHairMesh = { "ProxyHairMesh", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyHairMesh), Z_Construct_UClass_UStaticMesh_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyHairMesh_MetaData), NewProp_ProxyHairMesh_MetaData) };
 const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyBillboardMesh = { "ProxyBillboardMesh", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyBillboardMesh), Z_Construct_UClass_UStaticMesh_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyBillboardMesh_MetaData), NewProp_ProxyBillboardMesh_MetaData) };
+const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyBillboardEffect = { "ProxyBillboardEffect", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyBillboardEffect), Z_Construct_UClass_UNiagaraSystem_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyBillboardEffect_MetaData), NewProp_ProxyBillboardEffect_MetaData) };
 const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyParticleEffect = { "ProxyParticleEffect", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyParticleEffect), Z_Construct_UClass_UNiagaraSystem_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyParticleEffect_MetaData), NewProp_ProxyParticleEffect_MetaData) };
 const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardFadeMaterial = { "BillboardFadeMaterial", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, BillboardFadeMaterial), Z_Construct_UClass_UMaterialInterface_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_BillboardFadeMaterial_MetaData), NewProp_BillboardFadeMaterial_MetaData) };
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardFadeDuration = { "BillboardFadeDuration", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, BillboardFadeDuration), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_BillboardFadeDuration_MetaData), NewProp_BillboardFadeDuration_MetaData) };
@@ -1063,16 +1220,11 @@ void Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_bColorizeBySigni
 	((UDAI_PerfMngrComponent*)Obj)->bColorizeBySignificance = 1;
 }
 const UECodeGen_Private::FBoolPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_bColorizeBySignificance = { "bColorizeBySignificance", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(UDAI_PerfMngrComponent), &Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_bColorizeBySignificance_SetBit, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_bColorizeBySignificance_MetaData), NewProp_bColorizeBySignificance_MetaData) };
-const UECodeGen_Private::FStructPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ComponentSuppressionRules_Inner = { "ComponentSuppressionRules", nullptr, (EPropertyFlags)0x0000000000000000, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, Z_Construct_UScriptStruct_FComponentSuppressionRule, METADATA_PARAMS(0, nullptr) }; // 2590223019
-const UECodeGen_Private::FArrayPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ComponentSuppressionRules = { "ComponentSuppressionRules", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Array, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ComponentSuppressionRules), EArrayPropertyFlags::None, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ComponentSuppressionRules_MetaData), NewProp_ComponentSuppressionRules_MetaData) }; // 2590223019
+const UECodeGen_Private::FStructPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ComponentSuppressionRules_Inner = { "ComponentSuppressionRules", nullptr, (EPropertyFlags)0x0000000000000000, UECodeGen_Private::EPropertyGenFlags::Struct, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, 0, Z_Construct_UScriptStruct_FComponentSuppressionRule, METADATA_PARAMS(0, nullptr) }; // 3872704499
+const UECodeGen_Private::FArrayPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ComponentSuppressionRules = { "ComponentSuppressionRules", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Array, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ComponentSuppressionRules), EArrayPropertyFlags::None, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ComponentSuppressionRules_MetaData), NewProp_ComponentSuppressionRules_MetaData) }; // 3872704499
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyEnterThreshold = { "ProxyEnterThreshold", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyEnterThreshold), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyEnterThreshold_MetaData), NewProp_ProxyEnterThreshold_MetaData) };
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyExitThreshold = { "ProxyExitThreshold", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyExitThreshold), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyExitThreshold_MetaData), NewProp_ProxyExitThreshold_MetaData) };
 const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxySwapDelay = { "ProxySwapDelay", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Float, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxySwapDelay), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxySwapDelay_MetaData), NewProp_ProxySwapDelay_MetaData) };
-void Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_bUseHISMProxyBatching_SetBit(void* Obj)
-{
-	((UDAI_PerfMngrComponent*)Obj)->bUseHISMProxyBatching = 1;
-}
-const UECodeGen_Private::FBoolPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_bUseHISMProxyBatching = { "bUseHISMProxyBatching", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, sizeof(bool), sizeof(UDAI_PerfMngrComponent), &Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_bUseHISMProxyBatching_SetBit, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_bUseHISMProxyBatching_MetaData), NewProp_bUseHISMProxyBatching_MetaData) };
 const UECodeGen_Private::FIntPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyBatchAddSize = { "ProxyBatchAddSize", nullptr, (EPropertyFlags)0x0010000000000005, UECodeGen_Private::EPropertyGenFlags::Int, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyBatchAddSize), METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyBatchAddSize_MetaData), NewProp_ProxyBatchAddSize_MetaData) };
 void Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_bAllowAIThrottling_SetBit(void* Obj)
 {
@@ -1083,6 +1235,7 @@ const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UDAI_PerfMngrCo
 const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyMeshComponent = { "ProxyMeshComponent", nullptr, (EPropertyFlags)0x0010000000082008, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyMeshComponent), Z_Construct_UClass_UStaticMeshComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyMeshComponent_MetaData), NewProp_ProxyMeshComponent_MetaData) };
 const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyHairMeshComponent = { "ProxyHairMeshComponent", nullptr, (EPropertyFlags)0x0010000000082008, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyHairMeshComponent), Z_Construct_UClass_UStaticMeshComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyHairMeshComponent_MetaData), NewProp_ProxyHairMeshComponent_MetaData) };
 const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardMeshComponent = { "BillboardMeshComponent", nullptr, (EPropertyFlags)0x0010000000082008, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, BillboardMeshComponent), Z_Construct_UClass_UStaticMeshComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_BillboardMeshComponent_MetaData), NewProp_BillboardMeshComponent_MetaData) };
+const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardEffectComponent = { "BillboardEffectComponent", nullptr, (EPropertyFlags)0x0010000000082008, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, BillboardEffectComponent), Z_Construct_UClass_UNiagaraComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_BillboardEffectComponent_MetaData), NewProp_BillboardEffectComponent_MetaData) };
 const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyEffectComponent = { "ProxyEffectComponent", nullptr, (EPropertyFlags)0x0010000000082008, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyEffectComponent), Z_Construct_UClass_UNiagaraComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyEffectComponent_MetaData), NewProp_ProxyEffectComponent_MetaData) };
 const UECodeGen_Private::FMulticastDelegatePropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_OnProxyEntered = { "OnProxyEntered", nullptr, (EPropertyFlags)0x0010000010080000, UECodeGen_Private::EPropertyGenFlags::InlineMulticastDelegate, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, OnProxyEntered), Z_Construct_UDelegateFunction_DAI_PerfMngr_OnProxyEnteredSignature__DelegateSignature, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_OnProxyEntered_MetaData), NewProp_OnProxyEntered_MetaData) }; // 3185369196
 const UECodeGen_Private::FMulticastDelegatePropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_OnProxyExited = { "OnProxyExited", nullptr, (EPropertyFlags)0x0010000010080000, UECodeGen_Private::EPropertyGenFlags::InlineMulticastDelegate, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, OnProxyExited), Z_Construct_UDelegateFunction_DAI_PerfMngr_OnProxyExitedSignature__DelegateSignature, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_OnProxyExited_MetaData), NewProp_OnProxyExited_MetaData) }; // 2929129087
@@ -1091,6 +1244,8 @@ const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_UDAI_Perf
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_TickEvaluationRate,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_TickIntervalHigh,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_TickIntervalLow,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_PerformanceQuality_Underlying,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_PerformanceQuality,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_MinTickClamp,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_MaxTickClamp,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_bAffectAbilitySystemTick,
@@ -1101,6 +1256,7 @@ const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_UDAI_Perf
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyStaticMesh,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyHairMesh,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyBillboardMesh,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyBillboardEffect,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyParticleEffect,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardFadeMaterial,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardFadeDuration,
@@ -1118,13 +1274,13 @@ const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_UDAI_Perf
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyEnterThreshold,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyExitThreshold,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxySwapDelay,
-	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_bUseHISMProxyBatching,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyBatchAddSize,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_bAllowAIThrottling,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_AIDeepFreezeSignificance,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyMeshComponent,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyHairMeshComponent,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardMeshComponent,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardEffectComponent,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyEffectComponent,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_OnProxyEntered,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_OnProxyExited,
@@ -1167,23 +1323,24 @@ UDAI_PerfMngrComponent::~UDAI_PerfMngrComponent() {}
 // End Class UDAI_PerfMngrComponent
 
 // Begin Registration
-struct Z_CompiledInDeferFile_FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics
+struct Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics
 {
 	static constexpr FEnumRegisterCompiledInInfo EnumInfo[] = {
-		{ EProxySwapState_StaticEnum, TEXT("EProxySwapState"), &Z_Registration_Info_UEnum_EProxySwapState, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 1431846166U) },
-		{ EPerformanceMode_StaticEnum, TEXT("EPerformanceMode"), &Z_Registration_Info_UEnum_EPerformanceMode, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 909143192U) },
-		{ ESuppressionComponentType_StaticEnum, TEXT("ESuppressionComponentType"), &Z_Registration_Info_UEnum_ESuppressionComponentType, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 2398797330U) },
+		{ EProxySwapState_StaticEnum, TEXT("EProxySwapState"), &Z_Registration_Info_UEnum_EProxySwapState, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 220849448U) },
+		{ EPerformanceMode_StaticEnum, TEXT("EPerformanceMode"), &Z_Registration_Info_UEnum_EPerformanceMode, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 1163164187U) },
+		{ ESuppressionComponentType_StaticEnum, TEXT("ESuppressionComponentType"), &Z_Registration_Info_UEnum_ESuppressionComponentType, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 1532735141U) },
+		{ EPerformanceQuality_StaticEnum, TEXT("EPerformanceQuality"), &Z_Registration_Info_UEnum_EPerformanceQuality, CONSTRUCT_RELOAD_VERSION_INFO(FEnumReloadVersionInfo, 2513431445U) },
 	};
 	static constexpr FStructRegisterCompiledInInfo ScriptStructInfo[] = {
-		{ FComponentSuppressionRule::StaticStruct, Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewStructOps, TEXT("ComponentSuppressionRule"), &Z_Registration_Info_UScriptStruct_ComponentSuppressionRule, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FComponentSuppressionRule), 2590223019U) },
+		{ FComponentSuppressionRule::StaticStruct, Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewStructOps, TEXT("ComponentSuppressionRule"), &Z_Registration_Info_UScriptStruct_ComponentSuppressionRule, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FComponentSuppressionRule), 3872704499U) },
 	};
 	static constexpr FClassRegisterCompiledInInfo ClassInfo[] = {
-		{ Z_Construct_UClass_UDAI_PerfMngrComponent, UDAI_PerfMngrComponent::StaticClass, TEXT("UDAI_PerfMngrComponent"), &Z_Registration_Info_UClass_UDAI_PerfMngrComponent, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UDAI_PerfMngrComponent), 3836386147U) },
+		{ Z_Construct_UClass_UDAI_PerfMngrComponent, UDAI_PerfMngrComponent::StaticClass, TEXT("UDAI_PerfMngrComponent"), &Z_Registration_Info_UClass_UDAI_PerfMngrComponent, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UDAI_PerfMngrComponent), 1673118825U) },
 	};
 };
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_1542698364(TEXT("/Script/DAI_PerfMngr"),
-	Z_CompiledInDeferFile_FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::ClassInfo),
-	Z_CompiledInDeferFile_FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::ScriptStructInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::ScriptStructInfo),
-	Z_CompiledInDeferFile_FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::EnumInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_PluginTest_Performance_Plugins_DAI_PerfMngr_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::EnumInfo));
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_2007879868(TEXT("/Script/DAI_PerfMngr"),
+	Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::ClassInfo),
+	Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::ScriptStructInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::ScriptStructInfo),
+	Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::EnumInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::EnumInfo));
 // End Registration
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
