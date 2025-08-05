@@ -22,6 +22,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Net/UnrealNetwork.h"
 #include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "NiagaraSystem.h"
 #include "ProxyHISMRootActor.h"
 #include "SignificanceManager.h"
@@ -947,20 +948,24 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime,
       // Add a billboard representation
       if (ProxyBillboardEffect) {
         if (BillboardEffectComponent == nullptr) {
-          // Spawn the Niagara effect in world space at the original mesh
-          // transform. Using a world transform avoids treating the effect like
-          // an instanced mesh and ensures it matches the actor's position and
-          // rotation.
-          BillboardEffectComponent = NewObject<UNiagaraComponent>(GetOwner());
-          BillboardEffectComponent->SetAsset(ProxyBillboardEffect);
-          BillboardEffectComponent->RegisterComponent();
-          BillboardEffectComponent->SetWorldTransform(CachedMeshWorldTransform);
-          BillboardEffectComponent->AttachToComponent(
-              GetOwner()->GetRootComponent(),
-              FAttachmentTransformRules::KeepWorldTransform);
-          BillboardEffectComponent->Activate();
-          if (!BillboardProxyTag.IsNone()) {
-            BillboardEffectComponent->ComponentTags.Add(BillboardProxyTag);
+          // Spawn the Niagara effect directly in the world and avoid HISM
+          // batching.
+          UWorld *World = GetWorld();
+          if (World) {
+            BillboardEffectComponent =
+                UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+                    World, ProxyBillboardEffect,
+                    CachedMeshWorldTransform.GetLocation(),
+                    CachedMeshWorldTransform.GetRotation().Rotator(),
+                    CachedMeshWorldTransform.GetScale3D(), false);
+            if (BillboardEffectComponent) {
+              BillboardEffectComponent->AttachToComponent(
+                  GetOwner()->GetRootComponent(),
+                  FAttachmentTransformRules::KeepWorldTransform);
+              if (!BillboardProxyTag.IsNone()) {
+                BillboardEffectComponent->ComponentTags.Add(BillboardProxyTag);
+              }
+            }
           }
         }
       } else if (ProxyBillboardMesh) {
