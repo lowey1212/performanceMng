@@ -947,12 +947,17 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime,
       // Add a billboard representation
       if (ProxyBillboardEffect) {
         if (BillboardEffectComponent == nullptr) {
+          // Spawn the Niagara effect in world space at the original mesh
+          // transform. Using a world transform avoids treating the effect like
+          // an instanced mesh and ensures it matches the actor's position and
+          // rotation.
           BillboardEffectComponent = NewObject<UNiagaraComponent>(GetOwner());
           BillboardEffectComponent->SetAsset(ProxyBillboardEffect);
           BillboardEffectComponent->RegisterComponent();
+          BillboardEffectComponent->SetWorldTransform(CachedMeshWorldTransform);
           BillboardEffectComponent->AttachToComponent(
               GetOwner()->GetRootComponent(),
-              FAttachmentTransformRules::KeepRelativeTransform);
+              FAttachmentTransformRules::KeepWorldTransform);
           BillboardEffectComponent->Activate();
           if (!BillboardProxyTag.IsNone()) {
             BillboardEffectComponent->ComponentTags.Add(BillboardProxyTag);
