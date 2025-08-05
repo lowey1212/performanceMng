@@ -860,21 +860,44 @@ void UDAI_PerfMngrComponent::TickComponent(
 
   EnsureSingleRepresentation();
 
-  if (bHasHISMInstance && ProxyStaticMesh) {
-    if (UWorld *World = GetWorld()) {
-      FTransform CurrentTransform = GetOwner()->GetActorTransform();
-      if (USkeletalMeshComponent *SkeletalMesh =
-              GetOwner()->FindComponentByClass<USkeletalMeshComponent>()) {
-        CurrentTransform = SkeletalMesh->GetComponentTransform();
+  if (bHasHISMInstance) {
+    if (BillboardState == EProxySwapState::ProxyActive ||
+        BillboardState == EProxySwapState::PendingSwapToFull) {
+      if (UWorld *World = GetWorld()) {
+        if (APlayerCameraManager *CamMgr =
+                UGameplayStatics::GetPlayerCameraManager(World, 0)) {
+          FVector CameraLoc = CamMgr->GetCameraLocation();
+          FVector MyLoc = ProxyHISMTransform.GetLocation();
+          FRotator LookAtRot = (CameraLoc - MyLoc).Rotation();
+          FTransform CurrentTransform = ProxyHISMTransform;
+          CurrentTransform.SetRotation(LookAtRot.Quaternion());
+          if (!CurrentTransform.Equals(ProxyHISMTransform)) {
+            if (UDAI_ProxyHISMManager *ProxyMgr =
+                    World->GetSubsystem<UDAI_ProxyHISMManager>()) {
+              ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag,
+                                                  ProxyHISMTransform);
+              ProxyMgr->QueueInstanceForBatch(ProxyHISMTag, CurrentTransform);
+              ProxyHISMTransform = CurrentTransform;
+            }
+          }
+        }
       }
+    } else if (ProxyStaticMesh) {
+      if (UWorld *World = GetWorld()) {
+        FTransform CurrentTransform = GetOwner()->GetActorTransform();
+        if (USkeletalMeshComponent *SkeletalMesh =
+                GetOwner()->FindComponentByClass<USkeletalMeshComponent>()) {
+          CurrentTransform = SkeletalMesh->GetComponentTransform();
+        }
 
-      if (!CurrentTransform.Equals(ProxyHISMTransform)) {
-        if (UDAI_ProxyHISMManager *ProxyMgr =
-                World->GetSubsystem<UDAI_ProxyHISMManager>()) {
-          ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag,
-                                             ProxyHISMTransform);
-          ProxyMgr->QueueInstanceForBatch(ProxyHISMTag, CurrentTransform);
-          ProxyHISMTransform = CurrentTransform;
+        if (!CurrentTransform.Equals(ProxyHISMTransform)) {
+          if (UDAI_ProxyHISMManager *ProxyMgr =
+                  World->GetSubsystem<UDAI_ProxyHISMManager>()) {
+            ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag,
+                                                ProxyHISMTransform);
+            ProxyMgr->QueueInstanceForBatch(ProxyHISMTag, CurrentTransform);
+            ProxyHISMTransform = CurrentTransform;
+          }
         }
       }
     }
@@ -966,10 +989,17 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime,
                                               GetOwner());
           if (HISM) {
             ProxyMgr->SetBatchSizeForTag(BillboardTag, ProxyBatchAddSize);
-            ProxyMgr->QueueInstanceForBatch(BillboardTag,
-                                            CachedMeshWorldTransform);
+            FTransform BillboardTransform = CachedMeshWorldTransform;
+            if (APlayerCameraManager *CamMgr =
+                    UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)) {
+              FVector CameraLoc = CamMgr->GetCameraLocation();
+              FVector MyLoc = BillboardTransform.GetLocation();
+              FRotator LookAtRot = (CameraLoc - MyLoc).Rotation();
+              BillboardTransform.SetRotation(LookAtRot.Quaternion());
+            }
+            ProxyMgr->QueueInstanceForBatch(BillboardTag, BillboardTransform);
             ProxyHISMTag = BillboardTag;
-            ProxyHISMTransform = CachedMeshWorldTransform;
+            ProxyHISMTransform = BillboardTransform;
             bHasHISMInstance = true;
           }
         }
