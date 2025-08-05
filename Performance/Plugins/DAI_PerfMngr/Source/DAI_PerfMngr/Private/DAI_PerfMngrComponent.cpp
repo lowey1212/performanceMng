@@ -860,26 +860,6 @@ void UDAI_PerfMngrComponent::TickComponent(
 
   EnsureSingleRepresentation();
 
-  if (bHasHISMInstance && ProxyStaticMesh) {
-    if (UWorld *World = GetWorld()) {
-      FTransform CurrentTransform = GetOwner()->GetActorTransform();
-      if (USkeletalMeshComponent *SkeletalMesh =
-              GetOwner()->FindComponentByClass<USkeletalMeshComponent>()) {
-        CurrentTransform = SkeletalMesh->GetComponentTransform();
-      }
-
-      if (!CurrentTransform.Equals(ProxyHISMTransform)) {
-        if (UDAI_ProxyHISMManager *ProxyMgr =
-                World->GetSubsystem<UDAI_ProxyHISMManager>()) {
-          ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag,
-                                             ProxyHISMTransform);
-          ProxyMgr->QueueInstanceForBatch(ProxyHISMTag, CurrentTransform);
-          ProxyHISMTransform = CurrentTransform;
-        }
-      }
-    }
-  }
-
   if (BillboardMeshComponent && BillboardMeshComponent->IsVisible()) {
     if (APlayerCameraManager *CamMgr =
             UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)) {
