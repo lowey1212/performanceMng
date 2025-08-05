@@ -12,6 +12,7 @@ class UStaticMesh;
 class UStaticMeshComponent;
 class UWidgetComponent;
 class UNiagaraComponent;
+class UNiagaraSystem;
 class UGroomComponent;
 class UDAI_ProxyHISMManager;
 class UBehaviorTreeComponent;
@@ -278,8 +279,14 @@ public:
    */
   UPROPERTY(EditAnywhere, BlueprintReadWrite,
             Category = "PerfMngr|Proxy|Billboard",
-            meta = (ToolTip = "Billboard mesh used when significance is very low. Can be batched via HISM for large crowds."))
+            meta = (ToolTip = "Billboard mesh used when significance is very low. Can be batched via HISM for large crowds. Ignored if ProxyBillboardEffect is set."))
   UStaticMesh *ProxyBillboardMesh = nullptr;
+
+  /** Niagara effect used as a sprite-based billboard when Niagara is available. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite,
+            Category = "PerfMngr|Proxy|Billboard",
+            meta = (ToolTip = "Sprite Niagara effect to use instead of the static billboard mesh. Faces the camera automatically and is cheaper when Niagara is present."))
+  UNiagaraSystem *ProxyBillboardEffect = nullptr;
 
   /** Niagara system used as a particle‑only proxy at very low significance. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite,
@@ -425,6 +432,7 @@ public:
   UPROPERTY(Transient) UStaticMeshComponent *ProxyHairMeshComponent = nullptr;
   UPROPERTY(Transient) UStaticMeshComponent *BillboardMeshComponent = nullptr;
   UPROPERTY(Transient) UNiagaraComponent *ProxyEffectComponent = nullptr;
+  UPROPERTY(Transient) UNiagaraComponent *BillboardEffectComponent = nullptr;
 
   // Events (Blueprint assignable)
   UPROPERTY(BlueprintAssignable,

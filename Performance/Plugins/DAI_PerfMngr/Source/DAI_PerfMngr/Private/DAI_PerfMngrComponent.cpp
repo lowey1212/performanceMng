@@ -317,6 +317,10 @@ void UDAI_PerfMngrComponent::SwapToFull() {
     ProxyEffectComponent->DestroyComponent();
     ProxyEffectComponent = nullptr;
   }
+  if (BillboardEffectComponent) {
+    BillboardEffectComponent->DestroyComponent();
+    BillboardEffectComponent = nullptr;
+  }
 
   // Show original meshes again and resume their ticking.
   TArray<UMeshComponent *> Meshes;
@@ -782,7 +786,8 @@ void UDAI_PerfMngrComponent::EnsureSingleRepresentation() {
   }
 
   const bool bBillboardVisible =
-      BillboardMeshComponent && BillboardMeshComponent->IsVisible();
+      (BillboardMeshComponent && BillboardMeshComponent->IsVisible()) ||
+      (BillboardEffectComponent && BillboardEffectComponent->IsActive());
   const bool bProxyVisible =
       ProxyMeshComponent && ProxyMeshComponent->IsVisible();
 
@@ -832,7 +837,8 @@ void UDAI_PerfMngrComponent::EnsureSingleRepresentation() {
   }
 
   bool bBillboardCheck =
-      BillboardMeshComponent && BillboardMeshComponent->IsVisible();
+      (BillboardMeshComponent && BillboardMeshComponent->IsVisible()) ||
+      (BillboardEffectComponent && BillboardEffectComponent->IsActive());
   bool bProxyCheck = ProxyMeshComponent && ProxyMeshComponent->IsVisible();
   bool bFullCheck = false;
   for (UMeshComponent *Mesh : Meshes) {
@@ -891,7 +897,7 @@ void UDAI_PerfMngrComponent::TickComponent(
 // fade material and duration are set.
 void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime,
                                                       float Significance) {
-  if (!ProxyBillboardMesh) {
+  if (!ProxyBillboardMesh && !ProxyBillboardEffect) {
     BillboardState = EProxySwapState::Active;
     return;
   }
@@ -934,8 +940,21 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime,
         bHasHISMInstance = false;
       }
 
-      // Add a billboard instance via the HISM manager
-      if (ProxyBillboardMesh) {
+      // Add a billboard representation
+      if (ProxyBillboardEffect) {
+        if (BillboardEffectComponent == nullptr) {
+          BillboardEffectComponent = NewObject<UNiagaraComponent>(GetOwner());
+          BillboardEffectComponent->SetAsset(ProxyBillboardEffect);
+          BillboardEffectComponent->RegisterComponent();
+          BillboardEffectComponent->AttachToComponent(
+              GetOwner()->GetRootComponent(),
+              FAttachmentTransformRules::KeepRelativeTransform);
+          BillboardEffectComponent->Activate();
+          if (!BillboardProxyTag.IsNone()) {
+            BillboardEffectComponent->ComponentTags.Add(BillboardProxyTag);
+          }
+        }
+      } else if (ProxyBillboardMesh) {
         if (UDAI_ProxyHISMManager *ProxyMgr =
                 GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>()) {
           // Batch billboard proxies by mesh so many actors share one HISM.
@@ -979,8 +998,11 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime,
 
     // Swap instantly after the configured delay
     if (BillboardTimeInCurrentState >= ProxySwapDelay) {
-      // Remove the billboard instance
-      if (bHasHISMInstance && ProxyBillboardMesh) {
+      // Remove the billboard representation
+      if (BillboardEffectComponent) {
+        BillboardEffectComponent->DestroyComponent();
+        BillboardEffectComponent = nullptr;
+      } else if (bHasHISMInstance && ProxyBillboardMesh) {
         if (UDAI_ProxyHISMManager *ProxyMgr =
                 GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>()) {
           ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
