@@ -179,6 +179,15 @@ void UDAI_PerfMngrComponent::SwapToProxy() {
     return;
   }
 
+  // Cache the world-space transform of the source mesh so proxies line up
+  // correctly (especially important for skeletal meshes whose root may not
+  // match the actor transform).
+  CachedMeshWorldTransform = Owner->GetActorTransform();
+  if (USkeletalMeshComponent *SkeletalMesh =
+          Owner->FindComponentByClass<USkeletalMeshComponent>()) {
+    CachedMeshWorldTransform = SkeletalMesh->GetComponentTransform();
+  }
+
   // If we previously swapped to a billboard via HISM, remove that instance
   // before using the regular proxy.
   if (bHasHISMInstance && ProxyBillboardMesh) {
@@ -229,8 +238,8 @@ void UDAI_PerfMngrComponent::SwapToProxy() {
         } else {
 
           ProxyMgr->SetBatchSizeForTag(ProxyTag, ProxyBatchAddSize);
-          ProxyMgr->QueueInstanceForBatch(ProxyTag, Owner->GetActorTransform());
-          ProxyHISMTransform = Owner->GetActorTransform();
+          ProxyMgr->QueueInstanceForBatch(ProxyTag, CachedMeshWorldTransform);
+          ProxyHISMTransform = CachedMeshWorldTransform;
           ProxyHISMTag = ProxyTag;
           bHasHISMInstance = true;
         }
@@ -589,9 +598,9 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
                 Range > KINDA_SMALL_NUMBER
                     ? FMath::Clamp(Significance / Range, 0.0f, 1.0f)
                     : 1.0f;
-            SuppTick = FMath::Lerp(MatchedRule->ComponentTickInterval,
-                                   MatchedRule->ComponentTickIntervalLow,
-                                   Normalized);
+            SuppTick =
+                FMath::Lerp(MatchedRule->ComponentTickInterval,
+                            MatchedRule->ComponentTickIntervalLow, Normalized);
           }
 
           SuppTick = FMath::Clamp(SuppTick * QualityMultiplier, MinTickClamp,
@@ -667,8 +676,7 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
           SuppressedComponents.Remove(Comp);
         }
 
-        if (MatchedRule->ComponentType !=
-                ESuppressionComponentType::Niagara &&
+        if (MatchedRule->ComponentType != ESuppressionComponentType::Niagara &&
             (MatchedRule->ComponentTickIntervalHigh > 0.0f ||
              MatchedRule->ComponentTickIntervalLow > 0.0f)) {
           // Directly map significance into a high/low tick interval range so
@@ -686,8 +694,7 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
 #if WITH_EDITOR
       if (GEngine) {
         const uint64 DebugKey = reinterpret_cast<uint64>(Comp);
-        if (MatchedRule->ComponentType !=
-                ESuppressionComponentType::Niagara &&
+        if (MatchedRule->ComponentType != ESuppressionComponentType::Niagara &&
             MatchedRule->bPrintTickRate) {
           const float CurrentTick = Comp->GetComponentTickInterval();
           GEngine->AddOnScreenDebugMessage(
@@ -940,9 +947,9 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime,
           if (HISM) {
             ProxyMgr->SetBatchSizeForTag(BillboardTag, ProxyBatchAddSize);
             ProxyMgr->QueueInstanceForBatch(BillboardTag,
-                                            GetOwner()->GetActorTransform());
+                                            CachedMeshWorldTransform);
             ProxyHISMTag = BillboardTag;
-            ProxyHISMTransform = GetOwner()->GetActorTransform();
+            ProxyHISMTransform = CachedMeshWorldTransform;
             bHasHISMInstance = true;
           }
         }
@@ -992,10 +999,9 @@ void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime,
                                               GetOwner());
           if (HISM) {
             ProxyMgr->SetBatchSizeForTag(ProxyTag, ProxyBatchAddSize);
-            ProxyMgr->QueueInstanceForBatch(ProxyTag,
-                                            GetOwner()->GetActorTransform());
+            ProxyMgr->QueueInstanceForBatch(ProxyTag, CachedMeshWorldTransform);
             ProxyHISMTag = ProxyTag;
-            ProxyHISMTransform = GetOwner()->GetActorTransform();
+            ProxyHISMTransform = CachedMeshWorldTransform;
             bHasHISMInstance = true;
           }
         }
