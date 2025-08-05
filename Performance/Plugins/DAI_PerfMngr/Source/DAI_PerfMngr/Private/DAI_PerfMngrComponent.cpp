@@ -595,6 +595,10 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
           SuppressedComponents.Add(Comp, *MatchedRule);
         } else if (!SuppressedComponents.Contains(Comp)) {
           Comp->SetComponentTickEnabled(false);
+          // Ensure the component's tick interval matches the suppressed value
+          // (typically zero) so it resets correctly when significance drops
+          // below the suppression threshold again.
+          Comp->SetComponentTickInterval(MatchedRule->ComponentTickInterval);
 
           if (UAudioComponent *Audio = Cast<UAudioComponent>(Comp)) {
             Audio->Stop();
