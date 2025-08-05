@@ -10,7 +10,12 @@ class UMaterialInstanceDynamic;
 class UMaterialInterface;
 class UStaticMesh;
 class UStaticMeshComponent;
+class UWidgetComponent;
 class UNiagaraComponent;
+class UGroomComponent;
+class UDAI_ProxyHISMManager;
+class UBehaviorTreeComponent;
+class AAIController;
 
 /**
  * @brief Component that automatically swaps an actor between "full" and "proxy"
@@ -80,10 +85,13 @@ struct FComponentSuppressionRule {
 
   UPROPERTY(
       EditAnywhere, BlueprintReadWrite, Category = "Suppression",
-      meta = (ClampMin = "0.0",
-              ToolTip = "Tick interval when component is highly significant (active).",
-              EditCondition = "ComponentType != ESuppressionComponentType::Niagara",
-              EditConditionHides))
+      meta =
+          (ClampMin = "0.0",
+           ToolTip =
+               "Tick interval when component is highly significant (active).",
+           EditCondition =
+               "ComponentType != ESuppressionComponentType::Niagara",
+           EditConditionHides))
   float ComponentTickIntervalHigh = 0.0f;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Suppression",
@@ -196,13 +204,16 @@ public:
   UPROPERTY(
       EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
       meta = (ClampMin = "0.0",
-              ToolTip = "Tick interval to use when the actor is far or unimportant (larger = fewer updates, better performance)."))
+              ToolTip =
+                  "Tick interval to use when the actor is far or unimportant (larger = fewer updates, better performance)."))
   float TickIntervalLow = 0.2f;
 
   /** Global performance quality setting. Medium/Low increase tick intervals. */
   UPROPERTY(
       EditAnywhere, BlueprintReadWrite, Category = "PerfMngr",
-      meta = (ToolTip = "Overall performance quality setting controlling tick scaling."))
+      meta =
+          (ToolTip =
+               "Overall performance quality setting controlling tick scaling."))
   EPerformanceQuality PerformanceQuality = EPerformanceQuality::High;
 
   /** Lower bound on tick interval clamping applied by this component. */
