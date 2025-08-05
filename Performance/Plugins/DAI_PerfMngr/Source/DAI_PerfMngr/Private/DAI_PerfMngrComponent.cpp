@@ -459,7 +459,7 @@ void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
       ProxyTimeInCurrentState = 0.0f;
     }
 
-    if (ProxyBillboardMesh) {
+    if (ProxyBillboardMesh || ProxyBillboardEffect) {
       HandleBillboardProxySwap(GetWorld()->GetDeltaSeconds(), Significance);
     }
   }
@@ -823,6 +823,10 @@ void UDAI_PerfMngrComponent::EnsureSingleRepresentation() {
     if (BillboardMeshComponent) {
       BillboardMeshComponent->DestroyComponent();
       BillboardMeshComponent = nullptr;
+    }
+    if (BillboardEffectComponent) {
+      BillboardEffectComponent->DestroyComponent();
+      BillboardEffectComponent = nullptr;
     }
     for (UMeshComponent *Mesh : Meshes) {
       if (Mesh && Mesh != ProxyMeshComponent) {
