@@ -467,6 +467,7 @@ public:
                "Event fired when the actor exits proxy mode (back to full)."))
   FOnProxyExitedSignature OnProxyExited;
 
+#if WITH_CUSTOMIZABLE_OBJECT
   /** Skeletal mesh component updated after Mutable combination. */
   UPROPERTY(
       EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Mutable",
@@ -529,6 +530,7 @@ public:
   /** Recombine current slots and apply to the character's mesh component. */
   UFUNCTION(BlueprintCallable, Category = "PerfMngr|Mutable")
   void ApplyMutableCombination();
+#endif // WITH_CUSTOMIZABLE_OBJECT
 
 protected:
   /** Cached previous significance from last evaluation. */
