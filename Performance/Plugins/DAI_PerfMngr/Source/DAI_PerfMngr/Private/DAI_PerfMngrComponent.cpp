@@ -49,47 +49,47 @@
 
 // Significance Helper (needs to be above UDAI_PerfMngrComponent::BeginPlay)
 static float
-CalculateHybridSignificance(USignificanceManager::FManagedObjectInfo *Info,
-                            const FTransform &ViewTransform,
-                            float MaxDistance) {
-  AActor *TrackedActor = Cast<AActor>(Info->GetObject());
-  if (!TrackedActor)
-    return 0.0f;
+CalculateHybridSignificance(USignificanceManager::FManagedObjectInfo* Info,
+    const FTransform& ViewTransform,
+    float MaxDistance) {
+    AActor* TrackedActor = Cast<AActor>(Info->GetObject());
+    if (!TrackedActor)
+        return 0.0f;
 
-  if (USkeletalMeshComponent *SkeletalMesh =
-          TrackedActor->FindComponentByClass<USkeletalMeshComponent>()) {
-    if (UAnimInstance *AnimInstance = SkeletalMesh->GetAnimInstance()) {
-      int32 LODLevel = AnimInstance->GetLODLevel();
-      int32 MaxLODs = 4;
-      return 1.0f -
-             static_cast<float>(LODLevel) / static_cast<float>(MaxLODs - 1);
+    if (USkeletalMeshComponent* SkeletalMesh =
+        TrackedActor->FindComponentByClass<USkeletalMeshComponent>()) {
+        if (UAnimInstance* AnimInstance = SkeletalMesh->GetAnimInstance()) {
+            int32 LODLevel = AnimInstance->GetLODLevel();
+            int32 MaxLODs = 4;
+            return 1.0f -
+                static_cast<float>(LODLevel) / static_cast<float>(MaxLODs - 1);
+        }
     }
-  }
 
-  if (UStaticMeshComponent *StaticMesh =
-          TrackedActor->FindComponentByClass<UStaticMeshComponent>()) {
-    const FVector ObjectLocation = TrackedActor->GetActorLocation();
-    const FVector ViewLocation = ViewTransform.GetLocation();
-    float Distance = FVector::Dist(ObjectLocation, ViewLocation);
-    return 1.0f - FMath::Clamp(Distance / MaxDistance, 0.0f, 1.0f);
-  }
-  if (UNiagaraComponent *NiagaraComp =
-          TrackedActor->FindComponentByClass<UNiagaraComponent>()) {
-    const FVector ObjectLocation = TrackedActor->GetActorLocation();
-    const FVector ViewLocation = ViewTransform.GetLocation();
-    float Distance = FVector::Dist(ObjectLocation, ViewLocation);
-    return 1.0f - FMath::Clamp(Distance / MaxDistance, 0.0f, 1.0f);
-  }
-  return 0.0f;
+    if (UStaticMeshComponent* StaticMesh =
+        TrackedActor->FindComponentByClass<UStaticMeshComponent>()) {
+        const FVector ObjectLocation = TrackedActor->GetActorLocation();
+        const FVector ViewLocation = ViewTransform.GetLocation();
+        float Distance = FVector::Dist(ObjectLocation, ViewLocation);
+        return 1.0f - FMath::Clamp(Distance / MaxDistance, 0.0f, 1.0f);
+    }
+    if (UNiagaraComponent* NiagaraComp =
+        TrackedActor->FindComponentByClass<UNiagaraComponent>()) {
+        const FVector ObjectLocation = TrackedActor->GetActorLocation();
+        const FVector ViewLocation = ViewTransform.GetLocation();
+        float Distance = FVector::Dist(ObjectLocation, ViewLocation);
+        return 1.0f - FMath::Clamp(Distance / MaxDistance, 0.0f, 1.0f);
+    }
+    return 0.0f;
 }
 
 // UDAI_PerfMngrComponent Implementation
 
 // Constructor: set defaults for ticking and proxy options.
 UDAI_PerfMngrComponent::UDAI_PerfMngrComponent() {
-  PrimaryComponentTick.bCanEverTick = true;
-  ProxyBatchAddSize = 50;
-  bHasHISMInstance = false;
+    PrimaryComponentTick.bCanEverTick = true;
+    ProxyBatchAddSize = 50;
+    bHasHISMInstance = false;
 }
 
 // Called when the game starts.
@@ -97,105 +97,105 @@ UDAI_PerfMngrComponent::UDAI_PerfMngrComponent() {
 // color-by-significance, and starts a timer to periodically adjust ticking and
 // proxies based on importance.
 void UDAI_PerfMngrComponent::BeginPlay() {
-  Super::BeginPlay();
+    Super::BeginPlay();
 
 #if WITH_CUSTOMIZABLE_OBJECT
-  if (bEnableMutableCrowd) {
-    UCustomizableObjectSystem::SetProgressiveMipStreamingEnabled(true);
-  }
+    if (bEnableMutableCrowd) {
+        UCustomizableObjectSystem::SetProgressiveMipStreamingEnabled(true);
+    }
 #endif
 
-  AActor *Owner = GetOwner();
-  if (!Owner)
-    return;
+    AActor* Owner = GetOwner();
+    if (!Owner)
+        return;
 
-  if (bMergeStaticMeshes) {
-    MergeStaticMeshes();
-  }
-
-  if (bAffectAbilitySystemTick) {
-    CachedASC = Cast<UAbilitySystemComponent>(
-        Owner->GetComponentByClass(UAbilitySystemComponent::StaticClass()));
-  }
-
-  if (bColorizeBySignificance) {
-    TArray<UMeshComponent *> Meshes;
-    Owner->GetComponents<UMeshComponent>(Meshes);
-
-    for (UMeshComponent *Mesh : Meshes) {
-      if (!Mesh || !Mesh->IsRegistered())
-        continue;
-
-      TArray<UMaterialInstanceDynamic *> DynMats;
-      int32 MatCount = Mesh->GetNumMaterials();
-
-      for (int32 i = 0; i < MatCount; ++i) {
-        if (UMaterialInstanceDynamic *DynMat =
-                Mesh->CreateAndSetMaterialInstanceDynamic(i)) {
-          DynMats.Add(DynMat);
-        }
-      }
-      CachedDynamicMats.Add(Mesh, DynMats);
+    if (bMergeStaticMeshes) {
+        MergeStaticMeshes();
     }
-  }
 
-  if (USignificanceManager *Manager = USignificanceManager::Get(GetWorld())) {
-    const float LocalMaxDistance = MaxDistance;
+    if (bAffectAbilitySystemTick) {
+        CachedASC = Cast<UAbilitySystemComponent>(
+            Owner->GetComponentByClass(UAbilitySystemComponent::StaticClass()));
+    }
 
-    Manager->RegisterObject(
-        Owner, Category,
-        [LocalMaxDistance](USignificanceManager::FManagedObjectInfo *Info,
-                           const FTransform &ViewTransform) {
-          return CalculateHybridSignificance(Info, ViewTransform,
-                                             LocalMaxDistance);
-        },
-        USignificanceManager::EPostSignificanceType::None, nullptr);
+    if (bColorizeBySignificance) {
+        TArray<UMeshComponent*> Meshes;
+        Owner->GetComponents<UMeshComponent>(Meshes);
 
-    GetWorld()->GetTimerManager().SetTimer(
-        TickEvalTimerHandle, this,
-        &UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance,
-        TickEvaluationRate, true);
-  }
+        for (UMeshComponent* Mesh : Meshes) {
+            if (!Mesh || !Mesh->IsRegistered())
+                continue;
+
+            TArray<UMaterialInstanceDynamic*> DynMats;
+            int32 MatCount = Mesh->GetNumMaterials();
+
+            for (int32 i = 0; i < MatCount; ++i) {
+                if (UMaterialInstanceDynamic* DynMat =
+                    Mesh->CreateAndSetMaterialInstanceDynamic(i)) {
+                    DynMats.Add(DynMat);
+                }
+            }
+            CachedDynamicMats.Add(Mesh, DynMats);
+        }
+    }
+
+    if (USignificanceManager* Manager = USignificanceManager::Get(GetWorld())) {
+        const float LocalMaxDistance = MaxDistance;
+
+        Manager->RegisterObject(
+            Owner, Category,
+            [LocalMaxDistance](USignificanceManager::FManagedObjectInfo* Info,
+                const FTransform& ViewTransform) {
+                    return CalculateHybridSignificance(Info, ViewTransform,
+                        LocalMaxDistance);
+            },
+            USignificanceManager::EPostSignificanceType::None, nullptr);
+
+        GetWorld()->GetTimerManager().SetTimer(
+            TickEvalTimerHandle, this,
+            &UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance,
+            TickEvaluationRate, true);
+    }
 }
 
 // Called when the component stops.
 // Cleans up timers and removes any HISM proxy instance that was added.
 void UDAI_PerfMngrComponent::EndPlay(const EEndPlayReason::Type EndPlayReason) {
-  if (UWorld *World = GetWorld()) {
-    World->GetTimerManager().ClearTimer(TickEvalTimerHandle);
-  }
-  if (bHasHISMInstance && ProxyStaticMesh) {
-    UWorld *World = GetWorld();
-    if (World) {
-      if (UDAI_ProxyHISMManager *ProxyMgr =
-              World->GetSubsystem<UDAI_ProxyHISMManager>()) {
-        ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
-      }
+    if (UWorld* World = GetWorld()) {
+        World->GetTimerManager().ClearTimer(TickEvalTimerHandle);
     }
-    bHasHISMInstance = false;
-  }
+    if (bHasHISMInstance && ProxyStaticMesh) {
+        UWorld* World = GetWorld();
+        if (World) {
+            if (UDAI_ProxyHISMManager* ProxyMgr =
+                World->GetSubsystem<UDAI_ProxyHISMManager>()) {
+                ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
+            }
+        }
+        bHasHISMInstance = false;
+    }
 #if WITH_CUSTOMIZABLE_OBJECT
-  DeactivateMutable();
+    DeactivateMutable();
 #endif
-  Super::EndPlay(EndPlayReason);
+    Super::EndPlay(EndPlayReason);
 }
 
 // Final cleanup to remove any HISM instance if needed.
 void UDAI_PerfMngrComponent::OnComponentDestroyed(bool bDestroyingHierarchy) {
-  if (bHasHISMInstance && ProxyStaticMesh) {
-    UWorld *World = GetWorld();
-    if (World) {
-      if (UDAI_ProxyHISMManager *ProxyMgr =
-              World->GetSubsystem<UDAI_ProxyHISMManager>()) {
-        ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
-      }
+    if (bHasHISMInstance && ProxyStaticMesh) {
+        UWorld* World = GetWorld();
+        if (World) {
+            if (UDAI_ProxyHISMManager* ProxyMgr =
+                World->GetSubsystem<UDAI_ProxyHISMManager>()) {
+                ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
+            }
+        }
+        bHasHISMInstance = false;
     }
-    bHasHISMInstance = false;
-  }
 #if WITH_CUSTOMIZABLE_OBJECT
-  DeactivateMutable();
+    DeactivateMutable();
 #endif
-  Super::OnComponentDestroyed(bDestroyingHierarchy);
+    Super::OnComponentDestroyed(bDestroyingHierarchy);
 }
 
 // Switch to a lightweight visual for this actor (proxy).
@@ -203,264 +203,268 @@ void UDAI_PerfMngrComponent::OnComponentDestroyed(bool bDestroyingHierarchy) {
 // mesh or batch into a HISM. Optionally spawn a simple hair proxy.
 // Billboard/particles are handled separately.
 void UDAI_PerfMngrComponent::SwapToProxy() {
-  AActor *Owner = GetOwner();
-  if (!Owner) {
-    UE_LOG(LogTemp, Error, TEXT("[PerfMngr] SwapToProxy: Owner is null!"));
-    return;
-  }
+    AActor* Owner = GetOwner();
+    if (!Owner) {
+        UE_LOG(LogTemp, Error, TEXT("[PerfMngr] SwapToProxy: Owner is null!"));
+        return;
+    }
 
-  if (!ProxyStaticMesh) {
-    UE_LOG(LogTemp, Error,
-           TEXT("[PerfMngr] SwapToProxy: ProxyStaticMesh is null!"));
-    return;
-  }
+    if (!ProxyStaticMesh) {
+        UE_LOG(LogTemp, Error,
+            TEXT("[PerfMngr] SwapToProxy: ProxyStaticMesh is null!"));
+        return;
+    }
 
 #if WITH_CUSTOMIZABLE_OBJECT
-  if (bEnableMutableCrowd) {
-    DeactivateMutable();
-  }
+    if (bEnableMutableCrowd) {
+        DeactivateMutable();
+    }
 #endif
 
-  // Cache the world-space transform of the source mesh so proxies line up
-  // correctly (especially important for skeletal meshes whose root may not
-  // match the actor transform).
-  CachedMeshWorldTransform = Owner->GetActorTransform();
-  if (USkeletalMeshComponent *SkeletalMesh =
-          Owner->FindComponentByClass<USkeletalMeshComponent>()) {
-    CachedMeshWorldTransform = SkeletalMesh->GetComponentTransform();
-  }
-
-  // If we previously swapped to a billboard via HISM, remove that instance
-  // before using the regular proxy.
-  if (bHasHISMInstance && ProxyBillboardMesh) {
-    UWorld *World = GetWorld();
-    if (World) {
-      if (UDAI_ProxyHISMManager *ProxyMgr =
-              World->GetSubsystem<UDAI_ProxyHISMManager>()) {
-        ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
-      }
+    // Cache the world-space transform of the source mesh so proxies line up
+    // correctly (especially important for skeletal meshes whose root may not
+    // match the actor transform).
+    CachedMeshWorldTransform = Owner->GetActorTransform();
+    if (USkeletalMeshComponent* SkeletalMesh =
+        Owner->FindComponentByClass<USkeletalMeshComponent>()) {
+        CachedMeshWorldTransform = SkeletalMesh->GetComponentTransform();
     }
-    bHasHISMInstance = false;
-  }
 
-  // Hide original mesh components while a proxy is shown.
-  TArray<UMeshComponent *> Meshes;
-  Owner->GetComponents<UMeshComponent>(Meshes);
-  for (UMeshComponent *Mesh : Meshes) {
-    Mesh->SetVisibility(false, true);
-    Mesh->SetComponentTickEnabled(false);
-  }
-
-  // Hide hair components while a proxy is shown.
-  TArray<UGroomComponent *> GroomComps;
-  Owner->GetComponents<UGroomComponent>(GroomComps);
-  for (UGroomComponent *Groom : GroomComps) {
-    Groom->SetVisibility(false);
-    Groom->Deactivate();
-  }
-
-  // Add this actor’s transform into a pooled HISM for its proxy mesh.
-  if (ProxyStaticMesh && Owner) {
-    UWorld *World = GetWorld();
-    if (World) {
-      if (UDAI_ProxyHISMManager *ProxyMgr =
-              World->GetSubsystem<UDAI_ProxyHISMManager>()) {
-        // Use only the mesh name for the tag so actors sharing the same
-        // proxy mesh batch into a single HISM component.
-        FName ProxyTag = FName(
-            *FString::Printf(TEXT("Proxy_%s"), *ProxyStaticMesh->GetName()));
-        UE_LOG(LogTemp, Warning, TEXT("SwapToProxy: Owner: %s Mesh: %s"),
-               *Owner->GetName(), *ProxyStaticMesh->GetName());
-        UHierarchicalInstancedStaticMeshComponent *HISM =
-            ProxyMgr->GetOrCreateHISMForTag(ProxyTag, ProxyStaticMesh, Owner);
-        if (!HISM) {
-          UE_LOG(LogTemp, Error,
-                 TEXT("SwapToProxy: Failed to create HISM for %s"),
-                 *ProxyStaticMesh->GetName());
-        } else {
-
-          ProxyMgr->SetBatchSizeForTag(ProxyTag, ProxyBatchAddSize);
-          ProxyMgr->QueueInstanceForBatch(ProxyTag, CachedMeshWorldTransform);
-          ProxyHISMTransform = CachedMeshWorldTransform;
-          ProxyHISMTag = ProxyTag;
-          bHasHISMInstance = true;
+    // If we previously swapped to a billboard via HISM, remove that instance
+    // before using the regular proxy.
+    if (bHasHISMInstance && ProxyBillboardMesh) {
+        UWorld* World = GetWorld();
+        if (World) {
+            if (UDAI_ProxyHISMManager* ProxyMgr =
+                World->GetSubsystem<UDAI_ProxyHISMManager>()) {
+                ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
+            }
         }
-      } else {
-        UE_LOG(LogTemp, Error, TEXT("SwapToProxy: ProxyMgr is null!"));
-      }
+        bHasHISMInstance = false;
     }
-  }
 
-  // Optional: spawn a simple hair proxy mesh (not batched).
-  if (ProxyHairMesh) {
-    ProxyHairMeshComponent = NewObject<UStaticMeshComponent>(Owner);
-    ProxyHairMeshComponent->RegisterComponent();
-    ProxyHairMeshComponent->AttachToComponent(
-        Owner->GetRootComponent(),
-        FAttachmentTransformRules::KeepRelativeTransform);
-    ProxyHairMeshComponent->SetStaticMesh(ProxyHairMesh);
-    ProxyHairMeshComponent->SetVisibility(true);
-    // Apply an optional tag so designers can identify hair proxy meshes via
-    // component tags
-    if (!HairProxyTag.IsNone()) {
-      ProxyHairMeshComponent->ComponentTags.Add(HairProxyTag);
+    // Hide original mesh components while a proxy is shown.
+    TArray<UMeshComponent*> Meshes;
+    Owner->GetComponents<UMeshComponent>(Meshes);
+    for (UMeshComponent* Mesh : Meshes) {
+        Mesh->SetVisibility(false, true);
+        Mesh->SetComponentTickEnabled(false);
     }
-  }
 
-  // Billboard and particle proxies are handled elsewhere.
+    // Hide hair components while a proxy is shown.
+    TArray<UGroomComponent*> GroomComps;
+    Owner->GetComponents<UGroomComponent>(GroomComps);
+    for (UGroomComponent* Groom : GroomComps) {
+        Groom->SetVisibility(false);
+        Groom->Deactivate();
+    }
 
-  // Hide UI widget components while using a proxy.
-  TArray<UWidgetComponent *> WidgetComps;
-  Owner->GetComponents<UWidgetComponent>(WidgetComps);
-  for (UWidgetComponent *Widget : WidgetComps) {
-    Widget->SetVisibility(false);
-    Widget->SetComponentTickEnabled(false);
-  }
-  EnsureSingleRepresentation();
+    // Add this actor’s transform into a pooled HISM for its proxy mesh.
+    if (ProxyStaticMesh && Owner) {
+        UWorld* World = GetWorld();
+        if (World) {
+            if (UDAI_ProxyHISMManager* ProxyMgr =
+                World->GetSubsystem<UDAI_ProxyHISMManager>()) {
+                // Use only the mesh name for the tag so actors sharing the same
+                // proxy mesh batch into a single HISM component.
+                FName ProxyTag = FName(
+                    *FString::Printf(TEXT("Proxy_%s"), *ProxyStaticMesh->GetName()));
+                UE_LOG(LogTemp, Warning, TEXT("SwapToProxy: Owner: %s Mesh: %s"),
+                    *Owner->GetName(), *ProxyStaticMesh->GetName());
+                UHierarchicalInstancedStaticMeshComponent* HISM =
+                    ProxyMgr->GetOrCreateHISMForTag(ProxyTag, ProxyStaticMesh, Owner);
+                if (!HISM) {
+                    UE_LOG(LogTemp, Error,
+                        TEXT("SwapToProxy: Failed to create HISM for %s"),
+                        *ProxyStaticMesh->GetName());
+                }
+                else {
+
+                    ProxyMgr->SetBatchSizeForTag(ProxyTag, ProxyBatchAddSize);
+                    ProxyMgr->QueueInstanceForBatch(ProxyTag, CachedMeshWorldTransform);
+                    ProxyHISMTransform = CachedMeshWorldTransform;
+                    ProxyHISMTag = ProxyTag;
+                    bHasHISMInstance = true;
+                }
+            }
+            else {
+                UE_LOG(LogTemp, Error, TEXT("SwapToProxy: ProxyMgr is null!"));
+            }
+        }
+    }
+
+    // Optional: spawn a simple hair proxy mesh (not batched).
+    if (ProxyHairMesh) {
+        ProxyHairMeshComponent = NewObject<UStaticMeshComponent>(Owner);
+        ProxyHairMeshComponent->RegisterComponent();
+        ProxyHairMeshComponent->AttachToComponent(
+            Owner->GetRootComponent(),
+            FAttachmentTransformRules::KeepRelativeTransform);
+        ProxyHairMeshComponent->SetStaticMesh(ProxyHairMesh);
+        ProxyHairMeshComponent->SetVisibility(true);
+        // Apply an optional tag so designers can identify hair proxy meshes via
+        // component tags
+        if (!HairProxyTag.IsNone()) {
+            ProxyHairMeshComponent->ComponentTags.Add(HairProxyTag);
+        }
+    }
+
+    // Billboard and particle proxies are handled elsewhere.
+
+    // Hide UI widget components while using a proxy.
+    TArray<UWidgetComponent*> WidgetComps;
+    Owner->GetComponents<UWidgetComponent>(WidgetComps);
+    for (UWidgetComponent* Widget : WidgetComps) {
+        Widget->SetVisibility(false);
+        Widget->SetComponentTickEnabled(false);
+    }
+    EnsureSingleRepresentation();
 }
 
 // Return from proxy back to the full, original actor visuals.
 // Remove any proxy components/HISM instance and show everything again.
 void UDAI_PerfMngrComponent::SwapToFull() {
-  AActor *Owner = GetOwner();
-  if (!Owner)
-    return;
+    AActor* Owner = GetOwner();
+    if (!Owner)
+        return;
 
-  // If we used a batched HISM proxy, remove its instance.
-  if (bHasHISMInstance && ProxyStaticMesh) {
-    UWorld *World = GetWorld();
-    if (World) {
-      if (UDAI_ProxyHISMManager *ProxyMgr =
-              World->GetSubsystem<UDAI_ProxyHISMManager>()) {
-        ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
-      }
+    // If we used a batched HISM proxy, remove its instance.
+    if (bHasHISMInstance && ProxyStaticMesh) {
+        UWorld* World = GetWorld();
+        if (World) {
+            if (UDAI_ProxyHISMManager* ProxyMgr =
+                World->GetSubsystem<UDAI_ProxyHISMManager>()) {
+                ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
+            }
+        }
+        bHasHISMInstance = false;
     }
-    bHasHISMInstance = false;
-  }
 
-  // Clean up any spawned proxy components.
-  if (ProxyMeshComponent) {
-    ProxyMeshComponent->DestroyComponent();
-    ProxyMeshComponent = nullptr;
-  }
-  if (ProxyHairMeshComponent) {
-    ProxyHairMeshComponent->DestroyComponent();
-    ProxyHairMeshComponent = nullptr;
-  }
-  if (BillboardMeshComponent) {
-    BillboardMeshComponent->DestroyComponent();
-    BillboardMeshComponent = nullptr;
-  }
-  // Reset billboard fade state and clear any temporary materials.
-  bBillboardFadeActive = false;
-  ProxyFadeMaterials.Empty();
-  BillboardFadeMaterials.Empty();
-  if (ProxyEffectComponent) {
-    ProxyEffectComponent->DestroyComponent();
-    ProxyEffectComponent = nullptr;
-  }
-  if (BillboardEffectComponent) {
-    BillboardEffectComponent->DestroyComponent();
-    BillboardEffectComponent = nullptr;
-  }
+    // Clean up any spawned proxy components.
+    if (ProxyMeshComponent) {
+        ProxyMeshComponent->DestroyComponent();
+        ProxyMeshComponent = nullptr;
+    }
+    if (ProxyHairMeshComponent) {
+        ProxyHairMeshComponent->DestroyComponent();
+        ProxyHairMeshComponent = nullptr;
+    }
+    if (BillboardMeshComponent) {
+        BillboardMeshComponent->DestroyComponent();
+        BillboardMeshComponent = nullptr;
+    }
+    // Reset billboard fade state and clear any temporary materials.
+    bBillboardFadeActive = false;
+    ProxyFadeMaterials.Empty();
+    BillboardFadeMaterials.Empty();
+    if (ProxyEffectComponent) {
+        ProxyEffectComponent->DestroyComponent();
+        ProxyEffectComponent = nullptr;
+    }
+    if (BillboardEffectComponent) {
+        BillboardEffectComponent->DestroyComponent();
+        BillboardEffectComponent = nullptr;
+    }
 
-  // Show original meshes again and resume their ticking.
-  TArray<UMeshComponent *> Meshes;
-  Owner->GetComponents<UMeshComponent>(Meshes);
-  for (UMeshComponent *Mesh : Meshes) {
-    Mesh->SetVisibility(true, true);
-    Mesh->SetComponentTickEnabled(true);
-  }
+    // Show original meshes again and resume their ticking.
+    TArray<UMeshComponent*> Meshes;
+    Owner->GetComponents<UMeshComponent>(Meshes);
+    for (UMeshComponent* Mesh : Meshes) {
+        Mesh->SetVisibility(true, true);
+        Mesh->SetComponentTickEnabled(true);
+    }
 
-  // Show hair components again.
-  TArray<UGroomComponent *> GroomComps;
-  Owner->GetComponents<UGroomComponent>(GroomComps);
-  for (UGroomComponent *Groom : GroomComps) {
-    Groom->SetVisibility(true);
-    Groom->Activate();
-  }
+    // Show hair components again.
+    TArray<UGroomComponent*> GroomComps;
+    Owner->GetComponents<UGroomComponent>(GroomComps);
+    for (UGroomComponent* Groom : GroomComps) {
+        Groom->SetVisibility(true);
+        Groom->Activate();
+    }
 
-  // Show UI widget components again.
-  TArray<UWidgetComponent *> WidgetComps;
-  Owner->GetComponents<UWidgetComponent>(WidgetComps);
-  for (UWidgetComponent *Widget : WidgetComps) {
-    Widget->SetVisibility(true);
-    Widget->SetComponentTickEnabled(true);
-  }
+    // Show UI widget components again.
+    TArray<UWidgetComponent*> WidgetComps;
+    Owner->GetComponents<UWidgetComponent>(WidgetComps);
+    for (UWidgetComponent* Widget : WidgetComps) {
+        Widget->SetVisibility(true);
+        Widget->SetComponentTickEnabled(true);
+    }
 #if WITH_CUSTOMIZABLE_OBJECT
-  if (bEnableMutableCrowd) {
-    ActivateMutable();
-  }
+    if (bEnableMutableCrowd) {
+        ActivateMutable();
+    }
 #endif
-  EnsureSingleRepresentation();
+    EnsureSingleRepresentation();
 }
 
 // State machine that decides when to enter/exit proxy mode based on
 // "significance" (how important/near it is). Uses thresholds and delays to
 // avoid rapid flickering between states.
 void UDAI_PerfMngrComponent::HandleProxySwap(float DeltaTime,
-                                             float Significance) {
-  if (!ProxyStaticMesh) {
-    ProxyState = EProxySwapState::Active;
-    return;
-  }
-
-  ProxyTimeInCurrentState += DeltaTime;
-
-  switch (ProxyState) {
-  case EProxySwapState::Active:
-    if (Significance < ProxyEnterThreshold) {
-      ProxyState = EProxySwapState::PendingSwapToProxy;
-      ProxyTimeInCurrentState = 0.0f;
+    float Significance) {
+    if (!ProxyStaticMesh) {
+        ProxyState = EProxySwapState::Active;
+        return;
     }
-    break;
 
-  case EProxySwapState::PendingSwapToProxy:
-    if (Significance < ProxyEnterThreshold &&
-        ProxyTimeInCurrentState >= ProxySwapDelay) {
-      SwapToProxy();
-      ProxyState = EProxySwapState::ProxyActive;
-      ProxyTimeInCurrentState = 0.0f;
-      OnProxyEntered.Broadcast();
-    } else if (Significance >= ProxyEnterThreshold) {
-      ProxyState = EProxySwapState::Active;
-    }
-    break;
+    ProxyTimeInCurrentState += DeltaTime;
 
-  case EProxySwapState::ProxyActive:
-    if (Significance > ProxyExitThreshold) {
-      ProxyState = EProxySwapState::PendingSwapToFull;
-      ProxyTimeInCurrentState = 0.0f;
-    }
-    break;
+    switch (ProxyState) {
+    case EProxySwapState::Active:
+        if (Significance < ProxyEnterThreshold) {
+            ProxyState = EProxySwapState::PendingSwapToProxy;
+            ProxyTimeInCurrentState = 0.0f;
+        }
+        break;
 
-  case EProxySwapState::PendingSwapToFull:
-    if (Significance > ProxyExitThreshold &&
-        ProxyTimeInCurrentState >= ProxySwapDelay) {
-      SwapToFull();
-      ProxyState = EProxySwapState::Active;
-      ProxyTimeInCurrentState = 0.0f;
-      OnProxyExited.Broadcast();
-    } else if (Significance <= ProxyExitThreshold) {
-      ProxyState = EProxySwapState::ProxyActive;
+    case EProxySwapState::PendingSwapToProxy:
+        if (Significance < ProxyEnterThreshold &&
+            ProxyTimeInCurrentState >= ProxySwapDelay) {
+            SwapToProxy();
+            ProxyState = EProxySwapState::ProxyActive;
+            ProxyTimeInCurrentState = 0.0f;
+            OnProxyEntered.Broadcast();
+        }
+        else if (Significance >= ProxyEnterThreshold) {
+            ProxyState = EProxySwapState::Active;
+        }
+        break;
+
+    case EProxySwapState::ProxyActive:
+        if (Significance > ProxyExitThreshold) {
+            ProxyState = EProxySwapState::PendingSwapToFull;
+            ProxyTimeInCurrentState = 0.0f;
+        }
+        break;
+
+    case EProxySwapState::PendingSwapToFull:
+        if (Significance > ProxyExitThreshold &&
+            ProxyTimeInCurrentState >= ProxySwapDelay) {
+            SwapToFull();
+            ProxyState = EProxySwapState::Active;
+            ProxyTimeInCurrentState = 0.0f;
+            OnProxyExited.Broadcast();
+        }
+        else if (Significance <= ProxyExitThreshold) {
+            ProxyState = EProxySwapState::ProxyActive;
+        }
+        break;
     }
-    break;
-  }
-  EnsureSingleRepresentation();
+    EnsureSingleRepresentation();
 }
 
 // If enabled, tint dynamic materials from red (low importance) to green (high
 // importance).
 void UDAI_PerfMngrComponent::ApplyColorBySignificance(float Significance) {
-  for (auto &Entry : CachedDynamicMats) {
-    for (UMaterialInstanceDynamic *Mat : Entry.Value) {
-      if (Mat) {
-        FLinearColor Color = FLinearColor::LerpUsingHSV(
-            FLinearColor::Red, FLinearColor::Green, Significance);
-        Mat->SetVectorParameterValue("Color", Color);
-      }
+    for (auto& Entry : CachedDynamicMats) {
+        for (UMaterialInstanceDynamic* Mat : Entry.Value) {
+            if (Mat) {
+                FLinearColor Color = FLinearColor::LerpUsingHSV(
+                    FLinearColor::Red, FLinearColor::Green, Significance);
+                Mat->SetVectorParameterValue("Color", Color);
+            }
+        }
     }
-  }
 }
 
 // Run at a fixed interval.
@@ -468,477 +472,497 @@ void UDAI_PerfMngrComponent::ApplyColorBySignificance(float Significance) {
 // adjusts tick rates, manages AI pausing, and drives proxy/billboard/particle
 // swaps.
 void UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance() {
-  AActor *Owner = GetOwner();
-  if (!Owner)
-    return;
+    AActor* Owner = GetOwner();
+    if (!Owner)
+        return;
 
-  FVector ViewLocation = GEngine->GetFirstLocalPlayerController(GetWorld())
-                             ->PlayerCameraManager->GetCameraLocation();
-  float Significance =
-      1.0f -
-      FMath::Clamp(FVector::Dist(Owner->GetActorLocation(), ViewLocation) /
-                       MaxDistance,
-                   0.0f, 1.0f);
+    FVector ViewLocation = GEngine->GetFirstLocalPlayerController(GetWorld())
+        ->PlayerCameraManager->GetCameraLocation();
+    float Significance =
+        1.0f -
+        FMath::Clamp(FVector::Dist(Owner->GetActorLocation(), ViewLocation) /
+            MaxDistance,
+            0.0f, 1.0f);
 
-  if (bEnableDebugLog) {
-    UE_LOG(LogTemp, Log, TEXT("[PerfMngr] Significance: %.2f"), Significance);
-  }
-  if (bPrintSignificanceToScreen) {
-    GEngine->AddOnScreenDebugMessage(
-        -1, 1.1f, FColor::Yellow,
-        FString::Printf(TEXT("Significance: %.2f"), Significance));
-  }
-
-  if (bColorizeBySignificance) {
-    ApplyColorBySignificance(Significance);
-  }
-
-  if (ProxyStaticMesh) {
-    HandleProxySwap(GetWorld()->GetDeltaSeconds(), Significance);
-
-    // Re-check after full: force proxy if still under threshold
-    if (ProxyState == EProxySwapState::Active &&
-        Significance < ProxyEnterThreshold) {
-      UE_LOG(LogTemp, Warning,
-             TEXT("[PerfMngr] Forcing proxy re-entry after full, sig=%.2f"),
-             Significance);
-      ProxyState = EProxySwapState::PendingSwapToProxy;
-      ProxyTimeInCurrentState = 0.0f;
+    if (bEnableDebugLog) {
+        UE_LOG(LogTemp, Log, TEXT("[PerfMngr] Significance: %.2f"), Significance);
+    }
+    if (bPrintSignificanceToScreen) {
+        GEngine->AddOnScreenDebugMessage(
+            -1, 1.1f, FColor::Yellow,
+            FString::Printf(TEXT("Significance: %.2f"), Significance));
     }
 
-    if (ProxyBillboardMesh || ProxyBillboardEffect) {
-      HandleBillboardProxySwap(GetWorld()->GetDeltaSeconds(), Significance);
+    if (bColorizeBySignificance) {
+        ApplyColorBySignificance(Significance);
     }
-  }
 
-  if (ProxyParticleEffect) {
-    HandleParticleProxySwap(GetWorld()->GetDeltaSeconds(), Significance);
-  }
+    if (ProxyStaticMesh) {
+        HandleProxySwap(GetWorld()->GetDeltaSeconds(), Significance);
 
-  if (bAllowAIThrottling) {
-    ACharacter *CharacterOwner = Cast<ACharacter>(Owner);
-    if (CharacterOwner) {
-      AAIController *AIController =
-          Cast<AAIController>(CharacterOwner->GetController());
-      if (AIController) {
-        UBehaviorTreeComponent *BT =
-            AIController->FindComponentByClass<UBehaviorTreeComponent>();
-        if (BT) {
-          if (Significance < AIDeepFreezeSignificance && !BT->IsPaused()) {
-            // Pause AI logic when significance is below the deep freeze
-            // threshold.  Do not stop movement so that any in‑progress path
-            // following will continue updating the actor's location while the
-            // behavior tree remains paused.
-            BT->PauseLogic(FString("PerfMngr Deep Freeze"));
-          } else if (Significance >= AIDeepFreezeSignificance &&
-                     BT->IsPaused()) {
-            // Resume AI logic when the significance rises back above the
-            // threshold.
-            BT->ResumeLogic(FString("PerfMngr Resume"));
-          }
+        // Re-check after full: force proxy if still under threshold
+        if (ProxyState == EProxySwapState::Active &&
+            Significance < ProxyEnterThreshold) {
+            UE_LOG(LogTemp, Warning,
+                TEXT("[PerfMngr] Forcing proxy re-entry after full, sig=%.2f"),
+                Significance);
+            ProxyState = EProxySwapState::PendingSwapToProxy;
+            ProxyTimeInCurrentState = 0.0f;
         }
-      }
+
+        if (ProxyBillboardMesh || ProxyBillboardEffect) {
+            HandleBillboardProxySwap(GetWorld()->GetDeltaSeconds(), Significance);
+        }
     }
-  }
 
-  if (bDrawDebugProxySphere && IsUsingProxy()) {
-    DrawDebugSphere(GetWorld(), GetOwner()->GetActorLocation(), 100.f, 16,
-                    FColor::Magenta, false, ProxyDebugSphereDuration);
-  }
-  float QualityMultiplier = 1.0f;
-  if (PerformanceQuality == EPerformanceQuality::Medium) {
-    QualityMultiplier = 1.25f;
-  } else if (PerformanceQuality == EPerformanceQuality::Low) {
-    QualityMultiplier = 1.5f;
-  }
+    if (ProxyParticleEffect) {
+        HandleParticleProxySwap(GetWorld()->GetDeltaSeconds(), Significance);
+    }
 
-  float TickRate = FMath::Clamp(
-      FMath::Lerp(TickIntervalHigh, TickIntervalLow, 1.0f - Significance) *
-          QualityMultiplier,
-      MinTickClamp, MaxTickClamp);
-
-  Owner->SetActorTickInterval(TickRate);
-
-  if (bAffectAbilitySystemTick && CachedASC) {
-    CachedASC->SetComponentTickInterval(TickRate);
-  }
-
-  if (ComponentSuppressionRules.Num() > 0) {
-    TArray<UActorComponent *> AllComponents;
-    Owner->GetComponents(AllComponents);
-
-    for (UActorComponent *Comp : AllComponents) {
-      if (!Comp || !Comp->IsRegistered())
-        continue;
-
-      FComponentSuppressionRule *MatchedRule = nullptr;
-      for (FComponentSuppressionRule &Rule : ComponentSuppressionRules) {
-        bool TagMatch = !Rule.ComponentTagFilter.IsNone() &&
-                        Comp->ComponentHasTag(Rule.ComponentTagFilter);
-        bool NameMatch = !Rule.NameContains.IsEmpty() &&
-                         Comp->GetName().Contains(Rule.NameContains);
-
-        bool bMatches = false;
-        switch (Rule.ComponentType) {
-        case ESuppressionComponentType::Audio:
-          bMatches = Comp->IsA<UAudioComponent>();
-          break;
-        case ESuppressionComponentType::Niagara:
-          bMatches = Comp->IsA<UNiagaraComponent>();
-          break;
-        case ESuppressionComponentType::AbilitySystem:
-          bMatches = Comp->IsA<UAbilitySystemComponent>();
-          break;
-        case ESuppressionComponentType::Light:
-          bMatches = Comp->IsA<ULightComponent>();
-          break;
-        case ESuppressionComponentType::Widget:
-          bMatches =
-              Comp->IsA<UWidgetComponent>() &&
-              (TagMatch || NameMatch || Rule.ComponentTagFilter.IsNone());
-          break;
-        case ESuppressionComponentType::MotionWarping:
-          bMatches = NameMatch || TagMatch ||
-                     Comp->GetName().Contains(TEXT("MotionWarp"));
-          break;
-        case ESuppressionComponentType::Hair:
-          bMatches = Comp->IsA<UGroomComponent>() || NameMatch || TagMatch ||
-                     Comp->GetName().Contains(TEXT("Groom")) ||
-                     Comp->GetName().Contains(TEXT("Hair"));
-          break;
-        case ESuppressionComponentType::Physics:
-          if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
-            (void)Mesh->SetSimulatePhysics(false);
-          }
-          bMatches = true;
-          break;
-        case ESuppressionComponentType::Camera:
-          bMatches = Comp->IsA<UCameraComponent>() ||
-                     Comp->IsA<USpringArmComponent>() ||
-                     Comp->GetClass()->GetName().Contains(TEXT("GASCamera"));
-          break;
-        case ESuppressionComponentType::CustomTag:
-          bMatches = TagMatch;
-          break;
-        default:
-          break;
-        }
-
-        if (bMatches) {
-          MatchedRule = &Rule;
-          break;
-        }
-      }
-
-      if (!MatchedRule)
-        continue;
-
-      bool bShouldSuppress = Significance < MatchedRule->SuppressionThreshold;
-
-      if (bShouldSuppress) {
-        if (MatchedRule->ComponentTickInterval > 0.0f) {
-          float SuppTick = MatchedRule->ComponentTickInterval;
-
-          if (MatchedRule->ComponentType !=
-              ESuppressionComponentType::Niagara) {
-            // When suppressed but still ticking, dynamically blend between the
-            // suppressed tick interval and the "low" interval as significance
-            // approaches the suppression threshold.
-            const float Range = MatchedRule->SuppressionThreshold;
-            const float Normalized =
-                Range > KINDA_SMALL_NUMBER
-                    ? FMath::Clamp(Significance / Range, 0.0f, 1.0f)
-                    : 1.0f;
-            SuppTick =
-                FMath::Lerp(MatchedRule->ComponentTickInterval,
-                            MatchedRule->ComponentTickIntervalLow, Normalized);
-          }
-
-          SuppTick = FMath::Clamp(SuppTick * QualityMultiplier, MinTickClamp,
-                                  MaxTickClamp);
-          Comp->SetComponentTickInterval(SuppTick);
-          Comp->SetComponentTickEnabled(true);
-          SuppressedComponents.Add(Comp, *MatchedRule);
-        } else if (!SuppressedComponents.Contains(Comp)) {
-          Comp->SetComponentTickEnabled(false);
-          // Ensure the component's tick interval matches the suppressed value
-          // (typically zero) so it resets correctly when significance drops
-          // below the suppression threshold again.
-          Comp->SetComponentTickInterval(MatchedRule->ComponentTickInterval);
-
-          if (UAudioComponent *Audio = Cast<UAudioComponent>(Comp)) {
-            Audio->Stop();
-            Audio->SetActive(false);
-          } else if (ULightComponent *Light = Cast<ULightComponent>(Comp)) {
-            Light->SetVisibility(false);
-            Light->SetActive(false);
-          } else if (UNiagaraComponent *Niagara =
-                         Cast<UNiagaraComponent>(Comp)) {
-            Niagara->DeactivateImmediate();
-            Niagara->SetVisibility(false);
-          } else if (UWidgetComponent *Widget = Cast<UWidgetComponent>(Comp)) {
-            Widget->SetVisibility(false);
-            Widget->SetComponentTickEnabled(false);
-          } else if (UGroomComponent *Hair = Cast<UGroomComponent>(Comp)) {
-            Hair->SetVisibility(false);
-            Hair->Deactivate();
-          } else if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
-            Mesh->SetSimulatePhysics(false);
-          } else {
-            Comp->Deactivate();
-          }
-          SuppressedComponents.Add(Comp, *MatchedRule);
-        } else {
-          // Already suppressed and disabled; nothing else to do.
-        }
-      } else {
-        if (SuppressedComponents.Contains(Comp)) {
-          const FComponentSuppressionRule &PrevRule =
-              SuppressedComponents[Comp];
-          if (PrevRule.ComponentTickInterval <= 0.0f) {
-            if (ULightComponent *Light = Cast<ULightComponent>(Comp)) {
-              Light->SetVisibility(true);
-              Light->SetComponentTickEnabled(true);
-              Light->SetActive(true);
-            } else if (UAudioComponent *Audio = Cast<UAudioComponent>(Comp)) {
-              Audio->SetComponentTickEnabled(true);
-              Audio->SetActive(true);
-              Audio->Play();
-            } else if (UNiagaraComponent *Niagara =
-                           Cast<UNiagaraComponent>(Comp)) {
-              Niagara->SetComponentTickEnabled(true);
-              Niagara->SetVisibility(true);
-              Niagara->Activate();
-            } else if (UWidgetComponent *Widget =
-                           Cast<UWidgetComponent>(Comp)) {
-              Widget->SetVisibility(true);
-              Widget->SetComponentTickEnabled(true);
-            } else if (UGroomComponent *Hair = Cast<UGroomComponent>(Comp)) {
-              Hair->SetVisibility(true);
-              Hair->Activate();
-            } else if (UMeshComponent *Mesh = Cast<UMeshComponent>(Comp)) {
-              Mesh->SetSimulatePhysics(true);
-              Mesh->SetComponentTickEnabled(true);
-            } else {
-              Comp->SetComponentTickEnabled(true);
-              Comp->Activate(true);
+    if (bAllowAIThrottling) {
+        ACharacter* CharacterOwner = Cast<ACharacter>(Owner);
+        if (CharacterOwner) {
+            AAIController* AIController =
+                Cast<AAIController>(CharacterOwner->GetController());
+            if (AIController) {
+                UBehaviorTreeComponent* BT =
+                    AIController->FindComponentByClass<UBehaviorTreeComponent>();
+                if (BT) {
+                    if (Significance < AIDeepFreezeSignificance && !BT->IsPaused()) {
+                        // Pause AI logic when significance is below the deep freeze
+                        // threshold.  Do not stop movement so that any in‑progress path
+                        // following will continue updating the actor's location while the
+                        // behavior tree remains paused.
+                        BT->PauseLogic(FString("PerfMngr Deep Freeze"));
+                    }
+                    else if (Significance >= AIDeepFreezeSignificance &&
+                        BT->IsPaused()) {
+                        // Resume AI logic when the significance rises back above the
+                        // threshold.
+                        BT->ResumeLogic(FString("PerfMngr Resume"));
+                    }
+                }
             }
-          }
-          SuppressedComponents.Remove(Comp);
         }
+    }
 
-        if (MatchedRule->ComponentType != ESuppressionComponentType::Niagara &&
-            (MatchedRule->ComponentTickIntervalHigh > 0.0f ||
-             MatchedRule->ComponentTickIntervalLow > 0.0f)) {
-          // Directly map significance into a high/low tick interval range so
-          // components smoothly transition between fast and slow ticking.
-          float ActiveTick = FMath::Lerp(MatchedRule->ComponentTickIntervalHigh,
-                                         MatchedRule->ComponentTickIntervalLow,
-                                         1.0f - Significance);
-          ActiveTick = FMath::Clamp(ActiveTick * QualityMultiplier,
-                                    MinTickClamp, MaxTickClamp);
-          Comp->SetComponentTickInterval(ActiveTick);
-          Comp->SetComponentTickEnabled(true);
-        }
-      }
+    if (bDrawDebugProxySphere && IsUsingProxy()) {
+        DrawDebugSphere(GetWorld(), GetOwner()->GetActorLocation(), 100.f, 16,
+            FColor::Magenta, false, ProxyDebugSphereDuration);
+    }
+    float QualityMultiplier = 1.0f;
+    if (PerformanceQuality == EPerformanceQuality::Medium) {
+        QualityMultiplier = 1.25f;
+    }
+    else if (PerformanceQuality == EPerformanceQuality::Low) {
+        QualityMultiplier = 1.5f;
+    }
+
+    float TickRate = FMath::Clamp(
+        FMath::Lerp(TickIntervalHigh, TickIntervalLow, 1.0f - Significance) *
+        QualityMultiplier,
+        MinTickClamp, MaxTickClamp);
+
+    Owner->SetActorTickInterval(TickRate);
+
+    if (bAffectAbilitySystemTick && CachedASC) {
+        CachedASC->SetComponentTickInterval(TickRate);
+    }
+
+    if (ComponentSuppressionRules.Num() > 0) {
+        TArray<UActorComponent*> AllComponents;
+        Owner->GetComponents(AllComponents);
+
+        for (UActorComponent* Comp : AllComponents) {
+            if (!Comp || !Comp->IsRegistered())
+                continue;
+
+            FComponentSuppressionRule* MatchedRule = nullptr;
+            for (FComponentSuppressionRule& Rule : ComponentSuppressionRules) {
+                bool TagMatch = !Rule.ComponentTagFilter.IsNone() &&
+                    Comp->ComponentHasTag(Rule.ComponentTagFilter);
+                bool NameMatch = !Rule.NameContains.IsEmpty() &&
+                    Comp->GetName().Contains(Rule.NameContains);
+
+                bool bMatches = false;
+                switch (Rule.ComponentType) {
+                case ESuppressionComponentType::Audio:
+                    bMatches = Comp->IsA<UAudioComponent>();
+                    break;
+                case ESuppressionComponentType::Niagara:
+                    bMatches = Comp->IsA<UNiagaraComponent>();
+                    break;
+                case ESuppressionComponentType::AbilitySystem:
+                    bMatches = Comp->IsA<UAbilitySystemComponent>();
+                    break;
+                case ESuppressionComponentType::Light:
+                    bMatches = Comp->IsA<ULightComponent>();
+                    break;
+                case ESuppressionComponentType::Widget:
+                    bMatches =
+                        Comp->IsA<UWidgetComponent>() &&
+                        (TagMatch || NameMatch || Rule.ComponentTagFilter.IsNone());
+                    break;
+                case ESuppressionComponentType::MotionWarping:
+                    bMatches = NameMatch || TagMatch ||
+                        Comp->GetName().Contains(TEXT("MotionWarp"));
+                    break;
+                case ESuppressionComponentType::Hair:
+                    bMatches = Comp->IsA<UGroomComponent>() || NameMatch || TagMatch ||
+                        Comp->GetName().Contains(TEXT("Groom")) ||
+                        Comp->GetName().Contains(TEXT("Hair"));
+                    break;
+                case ESuppressionComponentType::Physics:
+                    if (UMeshComponent* Mesh = Cast<UMeshComponent>(Comp)) {
+                        (void)Mesh->SetSimulatePhysics(false);
+                    }
+                    bMatches = true;
+                    break;
+                case ESuppressionComponentType::Camera:
+                    bMatches = Comp->IsA<UCameraComponent>() ||
+                        Comp->IsA<USpringArmComponent>() ||
+                        Comp->GetClass()->GetName().Contains(TEXT("GASCamera"));
+                    break;
+                case ESuppressionComponentType::CustomTag:
+                    bMatches = TagMatch;
+                    break;
+                default:
+                    break;
+                }
+
+                if (bMatches) {
+                    MatchedRule = &Rule;
+                    break;
+                }
+            }
+
+            if (!MatchedRule)
+                continue;
+
+            bool bShouldSuppress = Significance < MatchedRule->SuppressionThreshold;
+
+            if (bShouldSuppress) {
+                if (MatchedRule->ComponentTickInterval > 0.0f) {
+                    float SuppTick = MatchedRule->ComponentTickInterval;
+
+                    if (MatchedRule->ComponentType !=
+                        ESuppressionComponentType::Niagara) {
+                        // When suppressed but still ticking, dynamically blend between the
+                        // suppressed tick interval and the "low" interval as significance
+                        // approaches the suppression threshold.
+                        const float Range = MatchedRule->SuppressionThreshold;
+                        const float Normalized =
+                            Range > KINDA_SMALL_NUMBER
+                            ? FMath::Clamp(Significance / Range, 0.0f, 1.0f)
+                            : 1.0f;
+                        SuppTick =
+                            FMath::Lerp(MatchedRule->ComponentTickInterval,
+                                MatchedRule->ComponentTickIntervalLow, Normalized);
+                    }
+
+                    SuppTick = FMath::Clamp(SuppTick * QualityMultiplier, MinTickClamp,
+                        MaxTickClamp);
+                    Comp->SetComponentTickInterval(SuppTick);
+                    Comp->SetComponentTickEnabled(true);
+                    SuppressedComponents.Add(Comp, *MatchedRule);
+                }
+                else if (!SuppressedComponents.Contains(Comp)) {
+                    Comp->SetComponentTickEnabled(false);
+                    // Ensure the component's tick interval matches the suppressed value
+                    // (typically zero) so it resets correctly when significance drops
+                    // below the suppression threshold again.
+                    Comp->SetComponentTickInterval(MatchedRule->ComponentTickInterval);
+
+                    if (UAudioComponent* Audio = Cast<UAudioComponent>(Comp)) {
+                        Audio->Stop();
+                        Audio->SetActive(false);
+                    }
+                    else if (ULightComponent* Light = Cast<ULightComponent>(Comp)) {
+                        Light->SetVisibility(false);
+                        Light->SetActive(false);
+                    }
+                    else if (UNiagaraComponent* Niagara =
+                        Cast<UNiagaraComponent>(Comp)) {
+                        Niagara->DeactivateImmediate();
+                        Niagara->SetVisibility(false);
+                    }
+                    else if (UWidgetComponent* Widget = Cast<UWidgetComponent>(Comp)) {
+                        Widget->SetVisibility(false);
+                        Widget->SetComponentTickEnabled(false);
+                    }
+                    else if (UGroomComponent* Hair = Cast<UGroomComponent>(Comp)) {
+                        Hair->SetVisibility(false);
+                        Hair->Deactivate();
+                    }
+                    else if (UMeshComponent* Mesh = Cast<UMeshComponent>(Comp)) {
+                        Mesh->SetSimulatePhysics(false);
+                    }
+                    else {
+                        Comp->Deactivate();
+                    }
+                    SuppressedComponents.Add(Comp, *MatchedRule);
+                }
+                else {
+                    // Already suppressed and disabled; nothing else to do.
+                }
+            }
+            else {
+                if (SuppressedComponents.Contains(Comp)) {
+                    const FComponentSuppressionRule& PrevRule =
+                        SuppressedComponents[Comp];
+                    if (PrevRule.ComponentTickInterval <= 0.0f) {
+                        if (ULightComponent* Light = Cast<ULightComponent>(Comp)) {
+                            Light->SetVisibility(true);
+                            Light->SetComponentTickEnabled(true);
+                            Light->SetActive(true);
+                        }
+                        else if (UAudioComponent* Audio = Cast<UAudioComponent>(Comp)) {
+                            Audio->SetComponentTickEnabled(true);
+                            Audio->SetActive(true);
+                            Audio->Play();
+                        }
+                        else if (UNiagaraComponent* Niagara =
+                            Cast<UNiagaraComponent>(Comp)) {
+                            Niagara->SetComponentTickEnabled(true);
+                            Niagara->SetVisibility(true);
+                            Niagara->Activate();
+                        }
+                        else if (UWidgetComponent* Widget =
+                            Cast<UWidgetComponent>(Comp)) {
+                            Widget->SetVisibility(true);
+                            Widget->SetComponentTickEnabled(true);
+                        }
+                        else if (UGroomComponent* Hair = Cast<UGroomComponent>(Comp)) {
+                            Hair->SetVisibility(true);
+                            Hair->Activate();
+                        }
+                        else if (UMeshComponent* Mesh = Cast<UMeshComponent>(Comp)) {
+                            Mesh->SetSimulatePhysics(true);
+                            Mesh->SetComponentTickEnabled(true);
+                        }
+                        else {
+                            Comp->SetComponentTickEnabled(true);
+                            Comp->Activate(true);
+                        }
+                    }
+                    SuppressedComponents.Remove(Comp);
+                }
+
+                if (MatchedRule->ComponentType != ESuppressionComponentType::Niagara &&
+                    (MatchedRule->ComponentTickIntervalHigh > 0.0f ||
+                        MatchedRule->ComponentTickIntervalLow > 0.0f)) {
+                    // Directly map significance into a high/low tick interval range so
+                    // components smoothly transition between fast and slow ticking.
+                    float ActiveTick = FMath::Lerp(MatchedRule->ComponentTickIntervalHigh,
+                        MatchedRule->ComponentTickIntervalLow,
+                        1.0f - Significance);
+                    ActiveTick = FMath::Clamp(ActiveTick * QualityMultiplier,
+                        MinTickClamp, MaxTickClamp);
+                    Comp->SetComponentTickInterval(ActiveTick);
+                    Comp->SetComponentTickEnabled(true);
+                }
+            }
 
 #if WITH_EDITOR
-      if (GEngine) {
-        const uint64 DebugKey = reinterpret_cast<uint64>(Comp);
-        if (MatchedRule->ComponentType != ESuppressionComponentType::Niagara &&
-            MatchedRule->bPrintTickRate) {
-          const float CurrentTick = Comp->GetComponentTickInterval();
-          GEngine->AddOnScreenDebugMessage(
-              DebugKey, TickEvaluationRate, FColor::Green,
-              FString::Printf(TEXT("%s Tick: %.3f"), *Comp->GetName(),
-                              CurrentTick));
-        } else {
-          GEngine->RemoveOnScreenDebugMessage(DebugKey);
-        }
-      }
+            if (GEngine) {
+                const uint64 DebugKey = reinterpret_cast<uint64>(Comp);
+                if (MatchedRule->ComponentType != ESuppressionComponentType::Niagara &&
+                    MatchedRule->bPrintTickRate) {
+                    const float CurrentTick = Comp->GetComponentTickInterval();
+                    GEngine->AddOnScreenDebugMessage(
+                        DebugKey, TickEvaluationRate, FColor::Green,
+                        FString::Printf(TEXT("%s Tick: %.3f"), *Comp->GetName(),
+                            CurrentTick));
+                }
+                else {
+                    GEngine->RemoveOnScreenDebugMessage(DebugKey);
+                }
+            }
 #endif
+        }
     }
-  }
 
-  if (bAffectAbilitySystemTick && CachedASC) {
-    CachedASC->SetComponentTickInterval(TickRate);
-  }
+    if (bAffectAbilitySystemTick && CachedASC) {
+        CachedASC->SetComponentTickInterval(TickRate);
+    }
 }
 
 // Let designers change how often we re-evaluate significance and update
 // tick/proxy decisions.
 void UDAI_PerfMngrComponent::SetTickEvaluationRate(float NewRate) {
-  TickEvaluationRate = FMath::Clamp(NewRate, MinTickClamp, MaxTickClamp);
+    TickEvaluationRate = FMath::Clamp(NewRate, MinTickClamp, MaxTickClamp);
 
-  if (UWorld *World = GetWorld()) {
-    World->GetTimerManager().ClearTimer(TickEvalTimerHandle);
-    World->GetTimerManager().SetTimer(
-        TickEvalTimerHandle, this,
-        &UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance,
-        TickEvaluationRate, true);
-  }
+    if (UWorld* World = GetWorld()) {
+        World->GetTimerManager().ClearTimer(TickEvalTimerHandle);
+        World->GetTimerManager().SetTimer(
+            TickEvalTimerHandle, this,
+            &UDAI_PerfMngrComponent::UpdateTickBasedOnSignificance,
+            TickEvaluationRate, true);
+    }
 }
 
 // Setter: change the replication/significance threshold value.
 void UDAI_PerfMngrComponent::SetSignificanceThreshold(float NewThreshold) {
-  ReplicationSignificanceThreshold = NewThreshold;
+    ReplicationSignificanceThreshold = NewThreshold;
 }
 
 // Setter: change the overall performance mode.
 void UDAI_PerfMngrComponent::SetPerformanceMode(EPerformanceMode NewMode) {
-  PerformanceMode = NewMode;
+    PerformanceMode = NewMode;
 }
 
 void UDAI_PerfMngrComponent::SetPerformanceQuality(
     EPerformanceQuality NewQuality) {
-  PerformanceQuality = NewQuality;
+    PerformanceQuality = NewQuality;
 }
 
 // Networking boilerplate (currently default behavior).
 void UDAI_PerfMngrComponent::GetLifetimeReplicatedProps(
-    TArray<FLifetimeProperty> &OutLifetimeProps) const {
-  Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    TArray<FLifetimeProperty>& OutLifetimeProps) const {
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }
 
 // Quick check: are we currently in proxy mode?
 bool UDAI_PerfMngrComponent::IsUsingProxy() const {
-  return ProxyState == EProxySwapState::ProxyActive;
+    return ProxyState == EProxySwapState::ProxyActive;
 }
 
 // Expose the current proxy swap state.
 EProxySwapState UDAI_PerfMngrComponent::GetCurrentProxyState() const {
-  return ProxyState;
+    return ProxyState;
 }
 
 // Force immediate switch into proxy mode (skips the usual checks).
 void UDAI_PerfMngrComponent::ForceSwapToProxy() {
-  SwapToProxy();
-  ProxyState = EProxySwapState::ProxyActive;
-  ProxyTimeInCurrentState = 0.0f;
+    SwapToProxy();
+    ProxyState = EProxySwapState::ProxyActive;
+    ProxyTimeInCurrentState = 0.0f;
 }
 
 // Force immediate switch back to full visuals.
 void UDAI_PerfMngrComponent::ForceSwapToFull() {
-  SwapToFull();
-  ProxyState = EProxySwapState::Active;
-  ProxyTimeInCurrentState = 0.0f;
+    SwapToFull();
+    ProxyState = EProxySwapState::Active;
+    ProxyTimeInCurrentState = 0.0f;
 }
 
 // Ensure only one representation (full, proxy, or billboard) is active at a
 // time.
 void UDAI_PerfMngrComponent::EnsureSingleRepresentation() {
-  AActor *Owner = GetOwner();
-  if (!Owner) {
-    return;
-  }
+    AActor* Owner = GetOwner();
+    if (!Owner) {
+        return;
+    }
 
-  const bool bBillboardVisible =
-      (BillboardMeshComponent && BillboardMeshComponent->IsVisible()) ||
-      (BillboardEffectComponent && BillboardEffectComponent->IsActive());
-  const bool bProxyVisible =
-      ProxyMeshComponent && ProxyMeshComponent->IsVisible();
+    const bool bBillboardVisible =
+        (BillboardMeshComponent && BillboardMeshComponent->IsVisible()) ||
+        (BillboardEffectComponent && BillboardEffectComponent->IsActive());
+    const bool bProxyVisible =
+        ProxyMeshComponent && ProxyMeshComponent->IsVisible();
 
-  bool bFullVisible = false;
-  TArray<UMeshComponent *> Meshes;
-  Owner->GetComponents<UMeshComponent>(Meshes);
-  for (UMeshComponent *Mesh : Meshes) {
-    if (Mesh && Mesh->IsVisible() && Mesh != ProxyMeshComponent &&
-        Mesh != BillboardMeshComponent) {
-      bFullVisible = true;
-      break;
+    bool bFullVisible = false;
+    TArray<UMeshComponent*> Meshes;
+    Owner->GetComponents<UMeshComponent>(Meshes);
+    for (UMeshComponent* Mesh : Meshes) {
+        if (Mesh && Mesh->IsVisible() && Mesh != ProxyMeshComponent &&
+            Mesh != BillboardMeshComponent) {
+            bFullVisible = true;
+            break;
+        }
     }
-  }
 
-  const int32 VisibleCount = (bBillboardVisible ? 1 : 0) +
-                             (bProxyVisible ? 1 : 0) + (bFullVisible ? 1 : 0);
-  if (VisibleCount <= 1) {
-    return;
-  }
+    const int32 VisibleCount = (bBillboardVisible ? 1 : 0) +
+        (bProxyVisible ? 1 : 0) + (bFullVisible ? 1 : 0);
+    if (VisibleCount <= 1) {
+        return;
+    }
 
-  if (bBillboardVisible) {
-    if (ProxyMeshComponent) {
-      ProxyMeshComponent->DestroyComponent();
-      ProxyMeshComponent = nullptr;
+    if (bBillboardVisible) {
+        if (ProxyMeshComponent) {
+            ProxyMeshComponent->DestroyComponent();
+            ProxyMeshComponent = nullptr;
+        }
+        for (UMeshComponent* Mesh : Meshes) {
+            if (Mesh && Mesh != BillboardMeshComponent) {
+                Mesh->SetVisibility(false, true);
+                Mesh->SetComponentTickEnabled(false);
+            }
+        }
     }
-    for (UMeshComponent *Mesh : Meshes) {
-      if (Mesh && Mesh != BillboardMeshComponent) {
-        Mesh->SetVisibility(false, true);
-        Mesh->SetComponentTickEnabled(false);
-      }
+    else if (bProxyVisible) {
+        if (BillboardMeshComponent) {
+            BillboardMeshComponent->DestroyComponent();
+            BillboardMeshComponent = nullptr;
+        }
+        if (BillboardEffectComponent) {
+            BillboardEffectComponent->DestroyComponent();
+            BillboardEffectComponent = nullptr;
+        }
+        for (UMeshComponent* Mesh : Meshes) {
+            if (Mesh && Mesh != ProxyMeshComponent) {
+                Mesh->SetVisibility(false, true);
+                Mesh->SetComponentTickEnabled(false);
+            }
+        }
     }
-  } else if (bProxyVisible) {
-    if (BillboardMeshComponent) {
-      BillboardMeshComponent->DestroyComponent();
-      BillboardMeshComponent = nullptr;
+    else {
+        SwapToFull();
+        ProxyState = EProxySwapState::Active;
+        BillboardState = EProxySwapState::Active;
     }
-    if (BillboardEffectComponent) {
-      BillboardEffectComponent->DestroyComponent();
-      BillboardEffectComponent = nullptr;
-    }
-    for (UMeshComponent *Mesh : Meshes) {
-      if (Mesh && Mesh != ProxyMeshComponent) {
-        Mesh->SetVisibility(false, true);
-        Mesh->SetComponentTickEnabled(false);
-      }
-    }
-  } else {
-    SwapToFull();
-    ProxyState = EProxySwapState::Active;
-    BillboardState = EProxySwapState::Active;
-  }
 
-  bool bBillboardCheck =
-      (BillboardMeshComponent && BillboardMeshComponent->IsVisible()) ||
-      (BillboardEffectComponent && BillboardEffectComponent->IsActive());
-  bool bProxyCheck = ProxyMeshComponent && ProxyMeshComponent->IsVisible();
-  bool bFullCheck = false;
-  for (UMeshComponent *Mesh : Meshes) {
-    if (Mesh && Mesh->IsVisible() && Mesh != ProxyMeshComponent &&
-        Mesh != BillboardMeshComponent) {
-      bFullCheck = true;
-      break;
+    bool bBillboardCheck =
+        (BillboardMeshComponent && BillboardMeshComponent->IsVisible()) ||
+        (BillboardEffectComponent && BillboardEffectComponent->IsActive());
+    bool bProxyCheck = ProxyMeshComponent && ProxyMeshComponent->IsVisible();
+    bool bFullCheck = false;
+    for (UMeshComponent* Mesh : Meshes) {
+        if (Mesh && Mesh->IsVisible() && Mesh != ProxyMeshComponent &&
+            Mesh != BillboardMeshComponent) {
+            bFullCheck = true;
+            break;
+        }
     }
-  }
-  const int32 Remaining =
-      (bBillboardCheck ? 1 : 0) + (bProxyCheck ? 1 : 0) + (bFullCheck ? 1 : 0);
-  if (Remaining > 1) {
-    SwapToFull();
-    ProxyState = EProxySwapState::Active;
-    BillboardState = EProxySwapState::Active;
-  }
+    const int32 Remaining =
+        (bBillboardCheck ? 1 : 0) + (bProxyCheck ? 1 : 0) + (bFullCheck ? 1 : 0);
+    if (Remaining > 1) {
+        SwapToFull();
+        ProxyState = EProxySwapState::Active;
+        BillboardState = EProxySwapState::Active;
+    }
 }
 
 // Per-frame updates for this component.
 // Keeps billboards facing the camera and prints optional debug info.
 void UDAI_PerfMngrComponent::TickComponent(
     float DeltaTime, enum ELevelTick TickType,
-    FActorComponentTickFunction *ThisTickFunction) {
-  Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+    FActorComponentTickFunction* ThisTickFunction) {
+    Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-  EnsureSingleRepresentation();
+    EnsureSingleRepresentation();
 
-  if (BillboardMeshComponent && BillboardMeshComponent->IsVisible()) {
-    if (APlayerCameraManager *CamMgr =
+    if (BillboardMeshComponent && BillboardMeshComponent->IsVisible()) {
+        if (APlayerCameraManager* CamMgr =
             UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)) {
-      FVector CameraLoc = CamMgr->GetCameraLocation();
-      FVector MyLoc = BillboardMeshComponent->GetComponentLocation();
-      FRotator LookAtRot = (CameraLoc - MyLoc).Rotation();
-      BillboardMeshComponent->SetWorldRotation(LookAtRot);
+            FVector CameraLoc = CamMgr->GetCameraLocation();
+            FVector MyLoc = BillboardMeshComponent->GetComponentLocation();
+            FRotator LookAtRot = (CameraLoc - MyLoc).Rotation();
+            BillboardMeshComponent->SetWorldRotation(LookAtRot);
+        }
     }
-  }
 
-  static float PrintTimer = 0.0f;
-  PrintTimer += DeltaTime;
-  if (bEnableDebugLog && PrintTimer > 2.0f) {
-    UWorld *World = GetWorld();
-    if (World) {
-      if (UDAI_ProxyHISMManager *ProxyMgr =
-              World->GetSubsystem<UDAI_ProxyHISMManager>()) {
-        ProxyMgr->PrintAllHISMDebugInfo();
-      }
+    static float PrintTimer = 0.0f;
+    PrintTimer += DeltaTime;
+    if (bEnableDebugLog && PrintTimer > 2.0f) {
+        UWorld* World = GetWorld();
+        if (World) {
+            if (UDAI_ProxyHISMManager* ProxyMgr =
+                World->GetSubsystem<UDAI_ProxyHISMManager>()) {
+                ProxyMgr->PrintAllHISMDebugInfo();
+            }
+        }
+        PrintTimer = 0.0f;
     }
-    PrintTimer = 0.0f;
-  }
 }
 
 // Billboard proxy swap logic (simplified explanation below).
@@ -947,471 +971,486 @@ void UDAI_PerfMngrComponent::TickComponent(
 // the actor is very far away. Supports instant swap or a smooth cross-fade if a
 // fade material and duration are set.
 void UDAI_PerfMngrComponent::HandleBillboardProxySwap(float DeltaTime,
-                                                      float Significance) {
-  if (!ProxyBillboardMesh && !ProxyBillboardEffect) {
-    BillboardState = EProxySwapState::Active;
-    return;
-  }
-
-  BillboardTimeInCurrentState += DeltaTime;
-
-  switch (BillboardState) {
-  case EProxySwapState::Active: {
-    // If significance falls below the billboard threshold and the actor is
-    // already in proxy mode, begin the pending swap to billboard.  Only
-    // transition when we are currently using a proxy representation (either
-    // HISM or unique mesh).
-    if (Significance < BillboardEnterThreshold) {
-      const bool bProxyVisible =
-          (ProxyMeshComponent != nullptr) || bHasHISMInstance;
-      if (bProxyVisible && ProxyState == EProxySwapState::ProxyActive) {
-        BillboardState = EProxySwapState::PendingSwapToProxy;
-        BillboardTimeInCurrentState = 0.0f;
-        // Reset fade state
-        bBillboardFadeActive = false;
-      }
-    }
-    break;
-  }
-  case EProxySwapState::PendingSwapToProxy: {
-    // Abort billboard swap if significance increases above the enter threshold
-    if (Significance >= BillboardEnterThreshold) {
-      BillboardState = EProxySwapState::Active;
-      break;
+    float Significance) {
+    if (!ProxyBillboardMesh && !ProxyBillboardEffect) {
+        BillboardState = EProxySwapState::Active;
+        return;
     }
 
-    // Swap instantly after the configured delay
-    if (BillboardTimeInCurrentState >= ProxySwapDelay) {
-      // Remove the existing proxy HISM instance
-      if (bHasHISMInstance && ProxyStaticMesh) {
-        if (UDAI_ProxyHISMManager *ProxyMgr =
-                GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>()) {
-          ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
-        }
-        bHasHISMInstance = false;
-      }
+    BillboardTimeInCurrentState += DeltaTime;
 
-      // Add a billboard representation
-      if (ProxyBillboardEffect) {
-        if (BillboardEffectComponent == nullptr) {
-          // Spawn the Niagara effect directly in the world and avoid HISM
-          // batching.
-          UWorld *World = GetWorld();
-          if (World) {
-            BillboardEffectComponent =
-                UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-                    World, ProxyBillboardEffect,
-                    CachedMeshWorldTransform.GetLocation(),
-                    CachedMeshWorldTransform.GetRotation().Rotator(),
-                    CachedMeshWorldTransform.GetScale3D(), false);
-            if (BillboardEffectComponent) {
-              BillboardEffectComponent->AttachToComponent(
-                  GetOwner()->GetRootComponent(),
-                  FAttachmentTransformRules::KeepWorldTransform);
-              if (!BillboardProxyTag.IsNone()) {
-                BillboardEffectComponent->ComponentTags.Add(BillboardProxyTag);
-              }
+    switch (BillboardState) {
+    case EProxySwapState::Active: {
+        // If significance falls below the billboard threshold and the actor is
+        // already in proxy mode, begin the pending swap to billboard.  Only
+        // transition when we are currently using a proxy representation (either
+        // HISM or unique mesh).
+        if (Significance < BillboardEnterThreshold) {
+            const bool bProxyVisible =
+                (ProxyMeshComponent != nullptr) || bHasHISMInstance;
+            if (bProxyVisible && ProxyState == EProxySwapState::ProxyActive) {
+                BillboardState = EProxySwapState::PendingSwapToProxy;
+                BillboardTimeInCurrentState = 0.0f;
+                // Reset fade state
+                bBillboardFadeActive = false;
             }
-          }
         }
-      } else if (ProxyBillboardMesh) {
-        if (UDAI_ProxyHISMManager *ProxyMgr =
-                GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>()) {
-          // Batch billboard proxies by mesh so many actors share one HISM.
-          FName BillboardTag = FName(*FString::Printf(
-              TEXT("Billboard_%s"), *ProxyBillboardMesh->GetName()));
-          UHierarchicalInstancedStaticMeshComponent *HISM =
-              ProxyMgr->GetOrCreateHISMForTag(BillboardTag, ProxyBillboardMesh,
-                                              GetOwner());
-          if (HISM) {
-            ProxyMgr->SetBatchSizeForTag(BillboardTag, ProxyBatchAddSize);
-            ProxyMgr->QueueInstanceForBatch(BillboardTag,
-                                            CachedMeshWorldTransform);
-            ProxyHISMTag = BillboardTag;
-            ProxyHISMTransform = CachedMeshWorldTransform;
-            bHasHISMInstance = true;
-          }
+        break;
+    }
+    case EProxySwapState::PendingSwapToProxy: {
+        // Abort billboard swap if significance increases above the enter threshold
+        if (Significance >= BillboardEnterThreshold) {
+            BillboardState = EProxySwapState::Active;
+            break;
         }
-      }
-      BillboardState = EProxySwapState::ProxyActive;
-      BillboardTimeInCurrentState = 0.0f;
-    }
-    break;
-  }
-  case EProxySwapState::ProxyActive: {
-    // When significance rises above the billboard exit threshold, begin pending
-    // swap back to proxy
-    if (Significance > BillboardExitThreshold) {
-      BillboardState = EProxySwapState::PendingSwapToFull;
-      BillboardTimeInCurrentState = 0.0f;
-      // Reset fade state for reverse fade
-      bBillboardFadeActive = false;
-    }
-    break;
-  }
-  case EProxySwapState::PendingSwapToFull: {
-    // Cancel exit if significance drops again below the exit threshold
-    if (Significance <= BillboardExitThreshold) {
-      BillboardState = EProxySwapState::ProxyActive;
-      break;
-    }
 
-    // Swap instantly after the configured delay
-    if (BillboardTimeInCurrentState >= ProxySwapDelay) {
-      // Remove the billboard representation
-      if (BillboardEffectComponent) {
-        BillboardEffectComponent->DestroyComponent();
-        BillboardEffectComponent = nullptr;
-      } else if (bHasHISMInstance && ProxyBillboardMesh) {
-        if (UDAI_ProxyHISMManager *ProxyMgr =
-                GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>()) {
-          ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
+        // Swap instantly after the configured delay
+        if (BillboardTimeInCurrentState >= ProxySwapDelay) {
+            // Remove the existing proxy HISM instance
+            if (bHasHISMInstance && ProxyStaticMesh) {
+                if (UDAI_ProxyHISMManager* ProxyMgr =
+                    GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>()) {
+                    ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
+                }
+                bHasHISMInstance = false;
+            }
+
+            // Add a billboard representation
+            if (ProxyBillboardEffect) {
+                if (BillboardEffectComponent == nullptr) {
+                    // Spawn the Niagara effect directly in the world and avoid HISM
+                    // batching.
+                    UWorld* World = GetWorld();
+                    if (World) {
+                        BillboardEffectComponent =
+                            UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+                                World, ProxyBillboardEffect,
+                                CachedMeshWorldTransform.GetLocation(),
+                                CachedMeshWorldTransform.GetRotation().Rotator(),
+                                CachedMeshWorldTransform.GetScale3D(), false);
+                        if (BillboardEffectComponent) {
+                            BillboardEffectComponent->AttachToComponent(
+                                GetOwner()->GetRootComponent(),
+                                FAttachmentTransformRules::KeepWorldTransform);
+                            if (!BillboardProxyTag.IsNone()) {
+                                BillboardEffectComponent->ComponentTags.Add(BillboardProxyTag);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (ProxyBillboardMesh) {
+                if (UDAI_ProxyHISMManager* ProxyMgr =
+                    GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>()) {
+                    // Batch billboard proxies by mesh so many actors share one HISM.
+                    FName BillboardTag = FName(*FString::Printf(
+                        TEXT("Billboard_%s"), *ProxyBillboardMesh->GetName()));
+                    UHierarchicalInstancedStaticMeshComponent* HISM =
+                        ProxyMgr->GetOrCreateHISMForTag(BillboardTag, ProxyBillboardMesh,
+                            GetOwner());
+                    if (HISM) {
+                        ProxyMgr->SetBatchSizeForTag(BillboardTag, ProxyBatchAddSize);
+                        ProxyMgr->QueueInstanceForBatch(BillboardTag,
+                            CachedMeshWorldTransform);
+                        ProxyHISMTag = BillboardTag;
+                        ProxyHISMTransform = CachedMeshWorldTransform;
+                        bHasHISMInstance = true;
+                    }
+                }
+            }
+            BillboardState = EProxySwapState::ProxyActive;
+            BillboardTimeInCurrentState = 0.0f;
         }
-        bHasHISMInstance = false;
-      }
-      // Restore the proxy instance via HISM
-      if (ProxyStaticMesh) {
-        if (UDAI_ProxyHISMManager *ProxyMgr =
-                GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>()) {
-          // Tag proxies solely by mesh name so actors reuse the same HISM.
-          FName ProxyTag = FName(
-              *FString::Printf(TEXT("Proxy_%s"), *ProxyStaticMesh->GetName()));
-          UHierarchicalInstancedStaticMeshComponent *HISM =
-              ProxyMgr->GetOrCreateHISMForTag(ProxyTag, ProxyStaticMesh,
-                                              GetOwner());
-          if (HISM) {
-            ProxyMgr->SetBatchSizeForTag(ProxyTag, ProxyBatchAddSize);
-            ProxyMgr->QueueInstanceForBatch(ProxyTag, CachedMeshWorldTransform);
-            ProxyHISMTag = ProxyTag;
-            ProxyHISMTransform = CachedMeshWorldTransform;
-            bHasHISMInstance = true;
-          }
-        }
-      }
-      BillboardState = EProxySwapState::Active;
-      BillboardTimeInCurrentState = 0.0f;
+        break;
     }
-    break;
-  }
-  }
-  EnsureSingleRepresentation();
+    case EProxySwapState::ProxyActive: {
+        // When significance rises above the billboard exit threshold, begin pending
+        // swap back to proxy
+        if (Significance > BillboardExitThreshold) {
+            BillboardState = EProxySwapState::PendingSwapToFull;
+            BillboardTimeInCurrentState = 0.0f;
+            // Reset fade state for reverse fade
+            bBillboardFadeActive = false;
+        }
+        break;
+    }
+    case EProxySwapState::PendingSwapToFull: {
+        // Cancel exit if significance drops again below the exit threshold
+        if (Significance <= BillboardExitThreshold) {
+            BillboardState = EProxySwapState::ProxyActive;
+            break;
+        }
+
+        // Swap instantly after the configured delay
+        if (BillboardTimeInCurrentState >= ProxySwapDelay) {
+            // Remove the billboard representation
+            if (BillboardEffectComponent) {
+                BillboardEffectComponent->DestroyComponent();
+                BillboardEffectComponent = nullptr;
+            }
+            else if (bHasHISMInstance && ProxyBillboardMesh) {
+                if (UDAI_ProxyHISMManager* ProxyMgr =
+                    GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>()) {
+                    ProxyMgr->RemoveInstanceAtTransform(ProxyHISMTag, ProxyHISMTransform);
+                }
+                bHasHISMInstance = false;
+            }
+            // Restore the proxy instance via HISM
+            if (ProxyStaticMesh) {
+                if (UDAI_ProxyHISMManager* ProxyMgr =
+                    GetWorld()->GetSubsystem<UDAI_ProxyHISMManager>()) {
+                    // Tag proxies solely by mesh name so actors reuse the same HISM.
+                    FName ProxyTag = FName(
+                        *FString::Printf(TEXT("Proxy_%s"), *ProxyStaticMesh->GetName()));
+                    UHierarchicalInstancedStaticMeshComponent* HISM =
+                        ProxyMgr->GetOrCreateHISMForTag(ProxyTag, ProxyStaticMesh,
+                            GetOwner());
+                    if (HISM) {
+                        ProxyMgr->SetBatchSizeForTag(ProxyTag, ProxyBatchAddSize);
+                        ProxyMgr->QueueInstanceForBatch(ProxyTag, CachedMeshWorldTransform);
+                        ProxyHISMTag = ProxyTag;
+                        ProxyHISMTransform = CachedMeshWorldTransform;
+                        bHasHISMInstance = true;
+                    }
+                }
+            }
+            BillboardState = EProxySwapState::Active;
+            BillboardTimeInCurrentState = 0.0f;
+        }
+        break;
+    }
+    }
+    EnsureSingleRepresentation();
 }
 
 // Particle proxy swap logic (simplified explanation below).
 // Handles swapping to/from a lightweight particle effect when the actor is
 // extremely far away.
 void UDAI_PerfMngrComponent::HandleParticleProxySwap(float DeltaTime,
-                                                     float Significance) {
-  if (!ProxyParticleEffect) {
-    ParticleState = EProxySwapState::Active;
-    return;
-  }
-
-  ParticleTimeInCurrentState += DeltaTime;
-
-  switch (ParticleState) {
-  case EProxySwapState::Active:
-    if (Significance < ParticleEnterThreshold) {
-      ParticleState = EProxySwapState::PendingSwapToProxy;
-      ParticleTimeInCurrentState = 0.0f;
+    float Significance) {
+    if (!ProxyParticleEffect) {
+        ParticleState = EProxySwapState::Active;
+        return;
     }
-    break;
 
-  case EProxySwapState::PendingSwapToProxy:
-    if (Significance < ParticleEnterThreshold &&
-        ParticleTimeInCurrentState >= ProxySwapDelay) {
-      if (ProxyEffectComponent == nullptr && ProxyParticleEffect) {
-        // Spawn the Niagara particle effect when entering particle proxy mode
-        ProxyEffectComponent = NewObject<UNiagaraComponent>(GetOwner());
-        ProxyEffectComponent->SetAsset(ProxyParticleEffect);
-        ProxyEffectComponent->RegisterComponent();
-        ProxyEffectComponent->AttachToComponent(
-            GetOwner()->GetRootComponent(),
-            FAttachmentTransformRules::KeepRelativeTransform);
-        ProxyEffectComponent->Activate();
-        // Tag the particle proxy for identification
-        if (!ParticleProxyTag.IsNone()) {
-          ProxyEffectComponent->ComponentTags.Add(ParticleProxyTag);
+    ParticleTimeInCurrentState += DeltaTime;
+
+    switch (ParticleState) {
+    case EProxySwapState::Active:
+        if (Significance < ParticleEnterThreshold) {
+            ParticleState = EProxySwapState::PendingSwapToProxy;
+            ParticleTimeInCurrentState = 0.0f;
         }
-      }
-      // Immediately enter the active state; particle proxies do not use HISM
-      // batching
-      ParticleState = EProxySwapState::ProxyActive;
-    } else if (Significance >= ParticleEnterThreshold) {
-      ParticleState = EProxySwapState::Active;
-    }
-    break;
+        break;
 
-  case EProxySwapState::ProxyActive:
-    if (Significance > ParticleExitThreshold) {
-      ParticleState = EProxySwapState::PendingSwapToFull;
-      ParticleTimeInCurrentState = 0.0f;
-    }
-    break;
+    case EProxySwapState::PendingSwapToProxy:
+        if (Significance < ParticleEnterThreshold &&
+            ParticleTimeInCurrentState >= ProxySwapDelay) {
+            if (ProxyEffectComponent == nullptr && ProxyParticleEffect) {
+                // Spawn the Niagara particle effect when entering particle proxy mode
+                ProxyEffectComponent = NewObject<UNiagaraComponent>(GetOwner());
+                ProxyEffectComponent->SetAsset(ProxyParticleEffect);
+                ProxyEffectComponent->RegisterComponent();
+                ProxyEffectComponent->AttachToComponent(
+                    GetOwner()->GetRootComponent(),
+                    FAttachmentTransformRules::KeepRelativeTransform);
+                ProxyEffectComponent->Activate();
+                // Tag the particle proxy for identification
+                if (!ParticleProxyTag.IsNone()) {
+                    ProxyEffectComponent->ComponentTags.Add(ParticleProxyTag);
+                }
+            }
+            // Immediately enter the active state; particle proxies do not use HISM
+            // batching
+            ParticleState = EProxySwapState::ProxyActive;
+        }
+        else if (Significance >= ParticleEnterThreshold) {
+            ParticleState = EProxySwapState::Active;
+        }
+        break;
 
-  case EProxySwapState::PendingSwapToFull:
-    if (Significance > ParticleExitThreshold &&
-        ParticleTimeInCurrentState >= ProxySwapDelay) {
-      // Destroy the Niagara particle effect when leaving particle proxy mode
-      if (ProxyEffectComponent) {
-        ProxyEffectComponent->DestroyComponent();
-        ProxyEffectComponent = nullptr;
-      }
-      ParticleState = EProxySwapState::Active;
-    } else if (Significance <= ParticleExitThreshold) {
-      // If significance drops again before the delay completes, remain in proxy
-      // active state
-      ParticleState = EProxySwapState::ProxyActive;
+    case EProxySwapState::ProxyActive:
+        if (Significance > ParticleExitThreshold) {
+            ParticleState = EProxySwapState::PendingSwapToFull;
+            ParticleTimeInCurrentState = 0.0f;
+        }
+        break;
+
+    case EProxySwapState::PendingSwapToFull:
+        if (Significance > ParticleExitThreshold &&
+            ParticleTimeInCurrentState >= ProxySwapDelay) {
+            // Destroy the Niagara particle effect when leaving particle proxy mode
+            if (ProxyEffectComponent) {
+                ProxyEffectComponent->DestroyComponent();
+                ProxyEffectComponent = nullptr;
+            }
+            ParticleState = EProxySwapState::Active;
+        }
+        else if (Significance <= ParticleExitThreshold) {
+            // If significance drops again before the delay completes, remain in proxy
+            // active state
+            ParticleState = EProxySwapState::ProxyActive;
+        }
+        break;
     }
-    break;
-  }
 }
 
 void UDAI_PerfMngrComponent::MergeStaticMeshes() {
-  AActor *Owner = GetOwner();
-  if (!Owner)
-    return;
+    AActor* Owner = GetOwner();
+    if (!Owner)
+        return;
 
-  TArray<UStaticMeshComponent *> MeshComponents;
-  Owner->GetComponents<UStaticMeshComponent>(MeshComponents);
+    TArray<UStaticMeshComponent*> MeshComponents;
+    Owner->GetComponents<UStaticMeshComponent>(MeshComponents);
 
-  if (MeshComponents.Num() <= 1)
-    return;
+    if (MeshComponents.Num() <= 1)
+        return;
 
 #if WITH_EDITOR
-  IMeshMergeUtilities &MergeUtilities =
-      FModuleManager::LoadModuleChecked<FMeshUtilities>("MeshUtilities")
-          .GetMeshMergeUtilities();
+    IMeshMergeUtilities& MergeUtilities =
+        FModuleManager::LoadModuleChecked<FMeshUtilities>("MeshUtilities")
+        .GetMeshMergeUtilities();
 
-  FMeshMergingSettings MergeSettings;
-  MergeSettings.bMergeMaterials = true;
-  MergeSettings.bGenerateLightMapUV = false;
-  MergeSettings.bPivotPointAtZero = true;
+    FMeshMergingSettings MergeSettings;
+    MergeSettings.bMergeMaterials = true;
+    MergeSettings.bGenerateLightMapUV = false;
+    MergeSettings.bPivotPointAtZero = true;
 
-  FString PackageName = Owner->GetOutermost()->GetName() + TEXT("_Merged");
-  UPackage *Package = CreatePackage(*PackageName);
-  UObject *OutAsset = nullptr;
-  MergeUtilities.MergeComponentsToStaticMesh(
-      MeshComponents, Owner->GetWorld(), MergeSettings, nullptr, nullptr,
-      Package, OutAsset,
-      FName(*FString::Printf(TEXT("%s_Merged"), *Owner->GetName())));
+    FString PackageName = Owner->GetOutermost()->GetName() + TEXT("_Merged");
+    UPackage* Package = CreatePackage(*PackageName);
+    UObject* OutAsset = nullptr;
+    MergeUtilities.MergeComponentsToStaticMesh(
+        MeshComponents, Owner->GetWorld(), MergeSettings, nullptr, nullptr,
+        Package, OutAsset,
+        FName(*FString::Printf(TEXT("%s_Merged"), *Owner->GetName())));
 
-  if (UStaticMesh *MergedMesh = Cast<UStaticMesh>(OutAsset)) {
-    UStaticMeshComponent *NewComponent = NewObject<UStaticMeshComponent>(Owner);
-    NewComponent->SetStaticMesh(MergedMesh);
-    NewComponent->RegisterComponent();
+    if (UStaticMesh* MergedMesh = Cast<UStaticMesh>(OutAsset)) {
+        UStaticMeshComponent* NewComponent = NewObject<UStaticMeshComponent>(Owner);
+        NewComponent->SetStaticMesh(MergedMesh);
+        NewComponent->RegisterComponent();
 
-    for (UStaticMeshComponent *Comp : MeshComponents) {
-      if (Comp != NewComponent) {
-        Comp->SetVisibility(false);
-        Comp->SetComponentTickEnabled(false);
-      }
+        for (UStaticMeshComponent* Comp : MeshComponents) {
+            if (Comp != NewComponent) {
+                Comp->SetVisibility(false);
+                Comp->SetComponentTickEnabled(false);
+            }
+        }
     }
-  }
 #elif WITH_CUSTOMIZABLE_OBJECT
-  UStaticMesh *MergedMesh =
-      UMutableRuntimeUtilities::MergeStaticMeshComponents(MeshComponents);
+    UStaticMesh* MergedMesh =
+        UMutableRuntimeUtilities::MergeStaticMeshComponents(MeshComponents);
 
-  if (MergedMesh) {
-    UStaticMeshComponent *NewComponent = NewObject<UStaticMeshComponent>(Owner);
-    NewComponent->SetStaticMesh(MergedMesh);
-    NewComponent->RegisterComponent();
+    if (MergedMesh) {
+        UStaticMeshComponent* NewComponent = NewObject<UStaticMeshComponent>(Owner);
+        NewComponent->SetStaticMesh(MergedMesh);
+        NewComponent->RegisterComponent();
 
-    for (UStaticMeshComponent *Comp : MeshComponents) {
-      if (Comp != NewComponent) {
-        Comp->SetVisibility(false);
-        Comp->SetComponentTickEnabled(false);
-      }
+        for (UStaticMeshComponent* Comp : MeshComponents) {
+            if (Comp != NewComponent) {
+                Comp->SetVisibility(false);
+                Comp->SetComponentTickEnabled(false);
+            }
+        }
     }
-  }
 #endif
 }
 
 #if WITH_CUSTOMIZABLE_OBJECT
 // Attach and update the Mutable skeletal mesh when close to the player.
 void UDAI_PerfMngrComponent::ActivateMutable() {
-  if (!bEnableMutableCrowd || !MutableInstance) {
-    return;
-  }
-
-  AActor* Owner = GetOwner();
-  if (!Owner) {
-    return;
-  }
-
-  USkeletalMeshComponent* SkeletalMesh =
-      Owner->FindComponentByClass<USkeletalMeshComponent>();
-  if (!SkeletalMesh) {
-    return;
-  }
-
-  if (!MutableComponent) {
-    MutableComponent = NewObject<UCustomizableSkeletalComponent>(SkeletalMesh);
-    if (MutableComponent) {
-      MutableComponent->RegisterComponent();
-      MutableComponent->AttachToComponent(
-          SkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform);
+    if (!bEnableMutableCrowd || !MutableInstance) {
+        return;
     }
-  }
 
-  if (MutableComponent) {
-    MutableComponent->SetCustomizableObjectInstance(MutableInstance);
-    MutableInstance->UpdateSkeletalMeshAsync();
-  }
+    AActor* Owner = GetOwner();
+    if (!Owner) {
+        return;
+    }
+
+    USkeletalMeshComponent* SkeletalMesh =
+        Owner->FindComponentByClass<USkeletalMeshComponent>();
+    if (!SkeletalMesh) {
+        return;
+    }
+
+    if (!MutableComponent) {
+        MutableComponent = NewObject<UCustomizableSkeletalComponent>(SkeletalMesh);
+        if (MutableComponent) {
+            MutableComponent->RegisterComponent();
+            MutableComponent->AttachToComponent(
+                SkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform);
+        }
+    }
+
+    if (MutableComponent) {
+        MutableComponent->SetCustomizableObjectInstance(MutableInstance);
+        MutableInstance->UpdateSkeletalMeshAsync();
+    }
 }
 
 // Detach and release the Mutable skeletal mesh when far away.
 void UDAI_PerfMngrComponent::DeactivateMutable() {
-  if (MutableComponent) {
-    MutableComponent->SetCustomizableObjectInstance(nullptr);
-  }
+    if (MutableComponent) {
+        MutableComponent->SetCustomizableObjectInstance(nullptr);
+    }
 }
 #endif
 
 TArray<FName> UDAI_PerfMngrComponent::GetMutableTagOptions() const {
-  TArray<FName> Tags;
+    TArray<FName> Tags;
 
-  if (const AActor *Owner = GetOwner()) {
-    TArray<UMeshComponent *> MeshComponents;
-    Owner->GetComponents<UMeshComponent>(MeshComponents);
-    for (UMeshComponent *Comp : MeshComponents) {
-      if (!Comp) {
-        continue;
-      }
+    if (const AActor* Owner = GetOwner()) {
+        TArray<UMeshComponent*> MeshComponents;
+        Owner->GetComponents<UMeshComponent>(MeshComponents);
+        for (UMeshComponent* Comp : MeshComponents) {
+            if (!Comp) {
+                continue;
+            }
 
-      if (USkeletalMeshComponent *SkelComp =
-              Cast<USkeletalMeshComponent>(Comp)) {
-        if (USkeletalMesh *SkelMesh = SkelComp->GetSkeletalMeshAsset()) {
-          Tags.AddUnique(SkelMesh->GetFName());
-          const TArray<FName> &SlotNames = SkelMesh->GetMaterialSlotNames();
-          for (const FName &Name : SlotNames) {
-            Tags.AddUnique(Name);
-          }
+            if (USkeletalMeshComponent* SkelComp =
+                Cast<USkeletalMeshComponent>(Comp)) {
+                if (USkeletalMesh* SkelMesh = SkelComp->GetSkeletalMeshAsset()) {
+                    Tags.AddUnique(SkelMesh->GetFName());
+                    TArray<FName> SlotNames;
+                    const TArray<FSkeletalMaterial>& Materials = SkelMesh->GetMaterials();
+                    for (const FStaticMaterial& Mat : Materials) {
+                        SlotNames.Add(Mat.MaterialSlotName);
+                    }
+                    for (const FName& Name : SlotNames) {
+                        Tags.AddUnique(Name);
+                    }
+                }
+            }
+            else if (UStaticMeshComponent* StaticComp =
+                Cast<UStaticMeshComponent>(Comp)) {
+                if (UStaticMesh* StaticMesh = StaticComp->GetStaticMesh()) {
+                    Tags.AddUnique(StaticMesh->GetFName());
+                    TArray<FName> SlotNames;
+                    const TArray<FStaticMaterial>& Materials = StaticMesh->GetStaticMaterials();
+                    for (const FStaticMaterial& Mat : Materials) {
+                        SlotNames.Add(Mat.MaterialSlotName);
+                    }
+                    for (const FName& Name : SlotNames) {
+                        Tags.AddUnique(Name);
+                    }
+                }
+            }
         }
-      } else if (UStaticMeshComponent *StaticComp =
-                     Cast<UStaticMeshComponent>(Comp)) {
-        if (UStaticMesh *StaticMesh = StaticComp->GetStaticMesh()) {
-          Tags.AddUnique(StaticMesh->GetFName());
-          const TArray<FName> &SlotNames = StaticMesh->GetMaterialSlotNames();
-          for (const FName &Name : SlotNames) {
-            Tags.AddUnique(Name);
-          }
-        }
-      }
     }
-  }
 
-  return Tags;
+    return Tags;
 }
 
 void UDAI_PerfMngrComponent::UpdateMutableMeshSlot(FName SlotName,
-                                                   USkeletalMesh *NewMesh) {
-  if (NewMesh) {
-    MutableMeshSlots.Add(SlotName, NewMesh);
-  } else {
-    MutableMeshSlots.Remove(SlotName);
-  }
+    USkeletalMesh* NewMesh) {
+    if (NewMesh) {
+        MutableMeshSlots.Add(SlotName, NewMesh);
+    }
+    else {
+        MutableMeshSlots.Remove(SlotName);
+    }
 
-  ApplyMutableCombination();
+    ApplyMutableCombination();
 }
 
 void UDAI_PerfMngrComponent::UpdateMutableMaterialSlot(
-    int32 MaterialIndex, UMaterialInterface *NewMaterial) {
-  if (MutableMaterialSlots.Num() <= MaterialIndex) {
-    MutableMaterialSlots.SetNum(MaterialIndex + 1);
-  }
-  MutableMaterialSlots[MaterialIndex] = NewMaterial;
+    int32 MaterialIndex, UMaterialInterface* NewMaterial) {
+    if (MutableMaterialSlots.Num() <= MaterialIndex) {
+        MutableMaterialSlots.SetNum(MaterialIndex + 1);
+    }
+    MutableMaterialSlots[MaterialIndex] = NewMaterial;
 
-  ApplyMutableCombination();
+    ApplyMutableCombination();
 }
 
 void UDAI_PerfMngrComponent::ApplyMutableCombination() {
-  if (!MutableSkeletalMeshComponent) {
-    if (AActor *Owner = GetOwner()) {
-      MutableSkeletalMeshComponent =
-          Owner->FindComponentByClass<USkeletalMeshComponent>();
+    if (!MutableSkeletalMeshComponent) {
+        if (AActor* Owner = GetOwner()) {
+            MutableSkeletalMeshComponent =
+                Owner->FindComponentByClass<USkeletalMeshComponent>();
+        }
     }
-  }
-  if (!MutableSkeletalMeshComponent) {
-    return;
-  }
-
-  USkeletalMesh *ResultMesh = nullptr;
-  for (auto &Pair : MutableMeshSlots) {
-    if (MutableTags.Contains(Pair.Key)) {
-      ResultMesh = Pair.Value;
-      break;
+    if (!MutableSkeletalMeshComponent) {
+        return;
     }
-  }
 
-  if (ResultMesh) {
-    MutableSkeletalMeshComponent->SetSkeletalMesh(ResultMesh);
-  }
-
-  TArray<FName> SlotNames;
-  if (USkeletalMesh *SkelMesh =
-          MutableSkeletalMeshComponent->GetSkeletalMeshAsset()) {
-    SlotNames = SkelMesh->GetMaterialSlotNames();
-  } else if (UStaticMeshComponent *StaticComp =
-                 Cast<UStaticMeshComponent>(MutableSkeletalMeshComponent)) {
-    if (UStaticMesh *StaticMesh = StaticComp->GetStaticMesh()) {
-      SlotNames = StaticMesh->GetMaterialSlotNames();
+    USkeletalMesh* ResultMesh = nullptr;
+    for (auto& Pair : MutableMeshSlots) {
+        if (MutableTags.Contains(Pair.Key)) {
+            ResultMesh = Pair.Value;
+            break;
+        }
     }
-  }
 
-  for (int32 MatIdx = 0;
-       MatIdx < MutableMaterialSlots.Num() && MatIdx < SlotNames.Num();
-       ++MatIdx) {
-    if (MutableMaterialSlots[MatIdx] &&
-        MutableTags.Contains(SlotNames[MatIdx])) {
-      MutableSkeletalMeshComponent->SetMaterial(MatIdx,
-                                                MutableMaterialSlots[MatIdx]);
+    if (ResultMesh) {
+        MutableSkeletalMeshComponent->SetSkeletalMesh(ResultMesh);
     }
-  }
+
+    TArray<FName> SlotNames;
+    if (USkeletalMesh* SkelMesh =
+        MutableSkeletalMeshComponent->GetSkeletalMeshAsset()) {
+        SlotNames = TArray<FName>()  // Removed invalid call to GetMaterialSlotNames();
+    }
+    else if (UStaticMeshComponent* StaticComp =
+        Cast<UStaticMeshComponent>(MutableSkeletalMeshComponent)) {
+        if (UStaticMesh* StaticMesh = StaticComp->GetStaticMesh()) {
+            SlotNames = TArray<FName>()  // Removed invalid call to GetMaterialSlotNames();
+        }
+    }
+
+    for (int32 MatIdx = 0;
+        MatIdx < MutableMaterialSlots.Num() && MatIdx < SlotNames.Num();
+        ++MatIdx) {
+        if (MutableMaterialSlots[MatIdx] &&
+            MutableTags.Contains(SlotNames[MatIdx])) {
+            MutableSkeletalMeshComponent->SetMaterial(MatIdx,
+                MutableMaterialSlots[MatIdx]);
+        }
+    }
 
 #if WITH_EDITOR
-  if (bDebugMutableCombination && GEngine) {
-    FString MeshInfo = TEXT("None");
-    for (auto &Pair : MutableMeshSlots) {
-      if (MutableTags.Contains(Pair.Key)) {
-        MeshInfo =
-            FString::Printf(TEXT("%s -> %s"), *Pair.Key.ToString(),
-                            Pair.Value ? *Pair.Value->GetName() : TEXT("None"));
-        break;
-      }
-    }
-
-    FString MaterialInfo;
-    for (int32 MatIdx = 0;
-         MatIdx < MutableMaterialSlots.Num() && MatIdx < SlotNames.Num();
-         ++MatIdx) {
-      if (MutableMaterialSlots[MatIdx] &&
-          MutableTags.Contains(SlotNames[MatIdx])) {
-        if (!MaterialInfo.IsEmpty()) {
-          MaterialInfo += TEXT(", ");
+    if (bDebugMutableCombination && GEngine) {
+        FString MeshInfo = TEXT("None");
+        for (auto& Pair : MutableMeshSlots) {
+            if (MutableTags.Contains(Pair.Key)) {
+                MeshInfo =
+                    FString::Printf(TEXT("%s -> %s"), *Pair.Key.ToString(),
+                        Pair.Value ? *Pair.Value->GetName() : TEXT("None"));
+                break;
+            }
         }
-        MaterialInfo +=
-            FString::Printf(TEXT("%s:%s"), *SlotNames[MatIdx].ToString(),
-                            *MutableMaterialSlots[MatIdx]->GetName());
-      }
-    }
 
-    GEngine->AddOnScreenDebugMessage(
-        -1, 5.f, FColor::Green,
-        FString::Printf(TEXT("Mutable mesh: %s"), *MeshInfo));
-    if (!MaterialInfo.IsEmpty()) {
-      GEngine->AddOnScreenDebugMessage(
-          -1, 5.f, FColor::Green,
-          FString::Printf(TEXT("Mutable materials: %s"), *MaterialInfo));
-    }
+        FString MaterialInfo;
+        for (int32 MatIdx = 0;
+            MatIdx < MutableMaterialSlots.Num() && MatIdx < SlotNames.Num();
+            ++MatIdx) {
+            if (MutableMaterialSlots[MatIdx] &&
+                MutableTags.Contains(SlotNames[MatIdx])) {
+                if (!MaterialInfo.IsEmpty()) {
+                    MaterialInfo += TEXT(", ");
+                }
+                MaterialInfo +=
+                    FString::Printf(TEXT("%s:%s"), *SlotNames[MatIdx].ToString(),
+                        *MutableMaterialSlots[MatIdx]->GetName());
+            }
+        }
 
-    const bool bApplied =
-        ResultMesh &&
-        MutableSkeletalMeshComponent->GetSkeletalMeshAsset() == ResultMesh;
-    GEngine->AddOnScreenDebugMessage(
-        -1, 5.f, bApplied ? FColor::Cyan : FColor::Red,
-        bApplied ? TEXT("Mesh applied to active character slot")
-                 : TEXT("Mesh NOT applied to active character slot"));
-  }
+        GEngine->AddOnScreenDebugMessage(
+            -1, 5.f, FColor::Green,
+            FString::Printf(TEXT("Mutable mesh: %s"), *MeshInfo));
+        if (!MaterialInfo.IsEmpty()) {
+            GEngine->AddOnScreenDebugMessage(
+                -1, 5.f, FColor::Green,
+                FString::Printf(TEXT("Mutable materials: %s"), *MaterialInfo));
+        }
+
+        const bool bApplied =
+            ResultMesh &&
+            MutableSkeletalMeshComponent->GetSkeletalMeshAsset() == ResultMesh;
+        GEngine->AddOnScreenDebugMessage(
+            -1, 5.f, bApplied ? FColor::Cyan : FColor::Red,
+            bApplied ? TEXT("Mesh applied to active character slot")
+            : TEXT("Mesh NOT applied to active character slot"));
+    }
 #endif
 }
