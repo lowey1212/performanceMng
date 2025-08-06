@@ -489,21 +489,24 @@ public:
                     GetOptions = "GetMutableTagOptions"))
   TArray<FName> MutableTags;
 
-#if WITH_CUSTOMIZABLE_OBJECT
   /** Enable runtime Mutable generation for crowd characters. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Mutable",
-            meta = (ToolTip = "If true, uses a Mutable instance to generate a \nunique skeletal mesh when this actor is significant."))
+  UPROPERTY(
+      EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Mutable",
+      meta =
+          (ToolTip = "If true, uses a Mutable instance to generate a \nunique "
+                     "skeletal mesh when this actor is significant."))
   bool bEnableMutableCrowd = false;
 
   /** Mutable instance used to create this actor's high detail mesh. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Mutable",
-            meta = (EditCondition = "bEnableMutableCrowd", ToolTip = "Customizable Object Instance providing parameter data for generation."))
-  UCustomizableObjectInstance* MutableInstance = nullptr;
+            meta = (EditCondition = "bEnableMutableCrowd",
+                    ToolTip = "Customizable Object Instance providing "
+                              "parameter data for generation."))
+  UCustomizableObjectInstance *MutableInstance = nullptr;
 
   /** Component that swaps in the generated Mutable mesh when ready. */
   UPROPERTY(Transient)
-  UCustomizableSkeletalComponent* MutableComponent = nullptr;
-#endif
+  UCustomizableSkeletalComponent *MutableComponent = nullptr;
 
 #if WITH_EDITORONLY_DATA
   /** Print information about Mutable combinations to the screen for debugging. Editor only. */
