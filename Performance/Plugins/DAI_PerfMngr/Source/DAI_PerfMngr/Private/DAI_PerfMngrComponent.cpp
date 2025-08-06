@@ -35,6 +35,12 @@
 #include "TimerManager.h"
 #include "UObject/Package.h"
 
+#if WITH_CUSTOMIZABLE_OBJECT
+#include "CustomizableObjectInstance.h"
+#include "CustomizableObjectSystem.h"
+#include "CustomizableSkeletalComponent.h"
+#endif
+
 // Significance Helper (needs to be above UDAI_PerfMngrComponent::BeginPlay)
 static float
 CalculateHybridSignificance(USignificanceManager::FManagedObjectInfo *Info,
@@ -86,6 +92,12 @@ UDAI_PerfMngrComponent::UDAI_PerfMngrComponent() {
 // proxies based on importance.
 void UDAI_PerfMngrComponent::BeginPlay() {
   Super::BeginPlay();
+
+#if WITH_CUSTOMIZABLE_OBJECT
+  if (bEnableMutableCrowd) {
+    UCustomizableObjectSystem::SetProgressiveMipStreamingEnabled(true);
+  }
+#endif
 
   AActor *Owner = GetOwner();
   if (!Owner)
@@ -156,6 +168,9 @@ void UDAI_PerfMngrComponent::EndPlay(const EEndPlayReason::Type EndPlayReason) {
     }
     bHasHISMInstance = false;
   }
+#if WITH_CUSTOMIZABLE_OBJECT
+  DeactivateMutable();
+#endif
   Super::EndPlay(EndPlayReason);
 }
 
@@ -171,6 +186,9 @@ void UDAI_PerfMngrComponent::OnComponentDestroyed(bool bDestroyingHierarchy) {
     }
     bHasHISMInstance = false;
   }
+#if WITH_CUSTOMIZABLE_OBJECT
+  DeactivateMutable();
+#endif
   Super::OnComponentDestroyed(bDestroyingHierarchy);
 }
 
@@ -190,6 +208,12 @@ void UDAI_PerfMngrComponent::SwapToProxy() {
            TEXT("[PerfMngr] SwapToProxy: ProxyStaticMesh is null!"));
     return;
   }
+
+#if WITH_CUSTOMIZABLE_OBJECT
+  if (bEnableMutableCrowd) {
+    DeactivateMutable();
+  }
+#endif
 
   // Cache the world-space transform of the source mesh so proxies line up
   // correctly (especially important for skeletal meshes whose root may not
@@ -357,6 +381,11 @@ void UDAI_PerfMngrComponent::SwapToFull() {
     Widget->SetVisibility(true);
     Widget->SetComponentTickEnabled(true);
   }
+#if WITH_CUSTOMIZABLE_OBJECT
+  if (bEnableMutableCrowd) {
+    ActivateMutable();
+  }
+#endif
   EnsureSingleRepresentation();
 }
 
@@ -1191,6 +1220,47 @@ void UDAI_PerfMngrComponent::MergeStaticMeshes() {
   }
 #endif
 }
+
+#if WITH_CUSTOMIZABLE_OBJECT
+// Attach and update the Mutable skeletal mesh when close to the player.
+void UDAI_PerfMngrComponent::ActivateMutable() {
+  if (!bEnableMutableCrowd || !MutableInstance) {
+    return;
+  }
+
+  AActor* Owner = GetOwner();
+  if (!Owner) {
+    return;
+  }
+
+  USkeletalMeshComponent* SkeletalMesh =
+      Owner->FindComponentByClass<USkeletalMeshComponent>();
+  if (!SkeletalMesh) {
+    return;
+  }
+
+  if (!MutableComponent) {
+    MutableComponent = NewObject<UCustomizableSkeletalComponent>(SkeletalMesh);
+    if (MutableComponent) {
+      MutableComponent->RegisterComponent();
+      MutableComponent->AttachToComponent(
+          SkeletalMesh, FAttachmentTransformRules::KeepRelativeTransform);
+    }
+  }
+
+  if (MutableComponent) {
+    MutableComponent->SetCustomizableObjectInstance(MutableInstance);
+    MutableInstance->UpdateSkeletalMeshAsync();
+  }
+}
+
+// Detach and release the Mutable skeletal mesh when far away.
+void UDAI_PerfMngrComponent::DeactivateMutable() {
+  if (MutableComponent) {
+    MutableComponent->SetCustomizableObjectInstance(nullptr);
+  }
+}
+#endif
 
 TArray<FName> UDAI_PerfMngrComponent::GetMutableTagOptions() const {
   TArray<FName> Tags;
