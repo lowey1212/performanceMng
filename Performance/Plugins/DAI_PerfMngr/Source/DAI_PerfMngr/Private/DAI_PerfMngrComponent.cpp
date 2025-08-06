@@ -14,12 +14,14 @@
 #include "DAI_ProxyHISMManager.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
+#include "Engine/SkeletalMesh.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GroomComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInterface.h"
 #include "Engine/MeshMerging.h"
 #include "MeshUtilities.h"
 #include "Modules/ModuleManager.h"
@@ -1171,4 +1173,68 @@ void UDAI_PerfMngrComponent::MergeStaticMeshes() {
     }
   }
 #endif
+}
+
+void UDAI_PerfMngrComponent::UpdateMutableMeshSlot(FName SlotName,
+                                                   USkeletalMesh* NewMesh)
+{
+  if (NewMesh)
+  {
+    MutableMeshSlots.Add(SlotName, NewMesh);
+  }
+  else
+  {
+    MutableMeshSlots.Remove(SlotName);
+  }
+
+  ApplyMutableCombination();
+}
+
+void UDAI_PerfMngrComponent::UpdateMutableMaterialSlot(
+    int32 MaterialIndex, UMaterialInterface* NewMaterial)
+{
+  if (MutableMaterialSlots.Num() <= MaterialIndex)
+  {
+    MutableMaterialSlots.SetNum(MaterialIndex + 1);
+  }
+  MutableMaterialSlots[MaterialIndex] = NewMaterial;
+
+  ApplyMutableCombination();
+}
+
+void UDAI_PerfMngrComponent::ApplyMutableCombination()
+{
+  if (!MutableSkeletalMeshComponent)
+  {
+    if (AActor* Owner = GetOwner())
+    {
+      MutableSkeletalMeshComponent =
+          Owner->FindComponentByClass<USkeletalMeshComponent>();
+    }
+  }
+  if (!MutableSkeletalMeshComponent)
+  {
+    return;
+  }
+
+  USkeletalMesh* ResultMesh = nullptr;
+  for (auto& Pair : MutableMeshSlots)
+  {
+    ResultMesh = Pair.Value;
+    break;
+  }
+
+  if (ResultMesh)
+  {
+    MutableSkeletalMeshComponent->SetSkeletalMesh(ResultMesh);
+  }
+
+  for (int32 MatIdx = 0; MatIdx < MutableMaterialSlots.Num(); ++MatIdx)
+  {
+    if (MutableMaterialSlots[MatIdx])
+    {
+      MutableSkeletalMeshComponent->SetMaterial(MatIdx,
+                                               MutableMaterialSlots[MatIdx]);
+    }
+  }
 }

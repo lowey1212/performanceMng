@@ -451,6 +451,31 @@ public:
           (ToolTip ="Event fired when the actor exits proxy mode (back to full)."))
   FOnProxyExitedSignature OnProxyExited;
 
+  /** Skeletal mesh component updated after Mutable combination. */
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Mutable",
+            meta = (ToolTip = "Mesh component that receives Mutable combined results."))
+  USkeletalMeshComponent* MutableSkeletalMeshComponent = nullptr;
+
+  /** Currently active mesh slots used for Mutable combination. */
+  UPROPERTY(Transient)
+  TMap<FName, USkeletalMesh*> MutableMeshSlots;
+
+  /** Material overrides applied when updating the combined mesh. */
+  UPROPERTY(Transient)
+  TArray<UMaterialInterface*> MutableMaterialSlots;
+
+  /** Update a specific mesh slot and reapply the combined mesh. */
+  UFUNCTION(BlueprintCallable, Category = "PerfMngr|Mutable")
+  void UpdateMutableMeshSlot(FName SlotName, USkeletalMesh* NewMesh);
+
+  /** Update a material slot and reapply the combined mesh. */
+  UFUNCTION(BlueprintCallable, Category = "PerfMngr|Mutable")
+  void UpdateMutableMaterialSlot(int32 MaterialIndex, UMaterialInterface* NewMaterial);
+
+  /** Recombine current slots and apply to the character's mesh component. */
+  UFUNCTION(BlueprintCallable, Category = "PerfMngr|Mutable")
+  void ApplyMutableCombination();
+
 protected:
   /** Cached previous significance from last evaluation. */
   float PreviousSignificance = 1.0f;
