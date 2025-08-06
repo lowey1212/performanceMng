@@ -25,6 +25,7 @@
 #include "Materials/MaterialInterface.h"
 #include "MeshUtilities.h"
 #include "Modules/ModuleManager.h"
+#include "MutableRuntimeUtilities.h"
 #include "Net/UnrealNetwork.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
@@ -1172,6 +1173,22 @@ void UDAI_PerfMngrComponent::MergeStaticMeshes() {
       }
     }
   }
+#else
+  UStaticMesh *MergedMesh =
+      UMutableRuntimeUtilities::MergeStaticMeshComponents(MeshComponents);
+
+  if (MergedMesh) {
+    UStaticMeshComponent *NewComponent = NewObject<UStaticMeshComponent>(Owner);
+    NewComponent->SetStaticMesh(MergedMesh);
+    NewComponent->RegisterComponent();
+
+    for (UStaticMeshComponent *Comp : MeshComponents) {
+      if (Comp != NewComponent) {
+        Comp->SetVisibility(false);
+        Comp->SetComponentTickEnabled(false);
+      }
+    }
+  }
 #endif
 }
 
@@ -1281,8 +1298,9 @@ void UDAI_PerfMngrComponent::ApplyMutableCombination() {
     FString MeshInfo = TEXT("None");
     for (auto &Pair : MutableMeshSlots) {
       if (MutableTags.Contains(Pair.Key)) {
-        MeshInfo = FString::Printf(TEXT("%s -> %s"), *Pair.Key.ToString(),
-                                   Pair.Value ? *Pair.Value->GetName() : TEXT("None"));
+        MeshInfo =
+            FString::Printf(TEXT("%s -> %s"), *Pair.Key.ToString(),
+                            Pair.Value ? *Pair.Value->GetName() : TEXT("None"));
         break;
       }
     }
@@ -1296,9 +1314,9 @@ void UDAI_PerfMngrComponent::ApplyMutableCombination() {
         if (!MaterialInfo.IsEmpty()) {
           MaterialInfo += TEXT(", ");
         }
-        MaterialInfo += FString::Printf(TEXT("%s:%s"),
-                                        *SlotNames[MatIdx].ToString(),
-                                        *MutableMaterialSlots[MatIdx]->GetName());
+        MaterialInfo +=
+            FString::Printf(TEXT("%s:%s"), *SlotNames[MatIdx].ToString(),
+                            *MutableMaterialSlots[MatIdx]->GetName());
       }
     }
 
@@ -1311,9 +1329,9 @@ void UDAI_PerfMngrComponent::ApplyMutableCombination() {
           FString::Printf(TEXT("Mutable materials: %s"), *MaterialInfo));
     }
 
-    const bool bApplied = ResultMesh &&
-                          MutableSkeletalMeshComponent->GetSkeletalMeshAsset() ==
-                              ResultMesh;
+    const bool bApplied =
+        ResultMesh &&
+        MutableSkeletalMeshComponent->GetSkeletalMeshAsset() == ResultMesh;
     GEngine->AddOnScreenDebugMessage(
         -1, 5.f, bApplied ? FColor::Cyan : FColor::Red,
         bApplied ? TEXT("Mesh applied to active character slot")
