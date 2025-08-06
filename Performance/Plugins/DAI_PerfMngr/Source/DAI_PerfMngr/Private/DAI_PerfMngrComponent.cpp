@@ -20,6 +20,10 @@
 #include "GroomComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Engine/MeshMerging.h"
+#include "MeshUtilities.h"
+#include "Modules/ModuleManager.h"
+#include "UObject/Package.h"
 #include "Net/UnrealNetwork.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
@@ -83,6 +87,10 @@ void UDAI_PerfMngrComponent::BeginPlay() {
   AActor *Owner = GetOwner();
   if (!Owner)
     return;
+
+  if (bMergeStaticMeshes) {
+    MergeStaticMeshes();
+  }
 
   if (bAffectAbilitySystemTick) {
     CachedASC = Cast<UAbilitySystemComponent>(
@@ -1119,4 +1127,48 @@ void UDAI_PerfMngrComponent::HandleParticleProxySwap(float DeltaTime,
     }
     break;
   }
+}
+
+void UDAI_PerfMngrComponent::MergeStaticMeshes() {
+  AActor *Owner = GetOwner();
+  if (!Owner)
+    return;
+
+  TArray<UStaticMeshComponent *> MeshComponents;
+  Owner->GetComponents<UStaticMeshComponent>(MeshComponents);
+
+  if (MeshComponents.Num() <= 1)
+    return;
+
+#if WITH_EDITOR
+  IMeshMergeUtilities &MergeUtilities =
+      FModuleManager::LoadModuleChecked<FMeshUtilities>("MeshUtilities")
+          .GetMeshMergeUtilities();
+
+  FMeshMergingSettings MergeSettings;
+  MergeSettings.bMergeMaterials = true;
+  MergeSettings.bGenerateLightMapUV = false;
+  MergeSettings.bPivotPointAtZero = true;
+
+  FString PackageName = Owner->GetOutermost()->GetName() + TEXT("_Merged");
+  UPackage *Package = CreatePackage(*PackageName);
+  UObject *OutAsset = nullptr;
+  MergeUtilities.MergeComponentsToStaticMesh(
+      MeshComponents, Owner->GetWorld(), MergeSettings, nullptr, nullptr,
+      Package, OutAsset,
+      FName(*FString::Printf(TEXT("%s_Merged"), *Owner->GetName())));
+
+  if (UStaticMesh *MergedMesh = Cast<UStaticMesh>(OutAsset)) {
+    UStaticMeshComponent *NewComponent = NewObject<UStaticMeshComponent>(Owner);
+    NewComponent->SetStaticMesh(MergedMesh);
+    NewComponent->RegisterComponent();
+
+    for (UStaticMeshComponent *Comp : MeshComponents) {
+      if (Comp != NewComponent) {
+        Comp->SetVisibility(false);
+        Comp->SetComponentTickEnabled(false);
+      }
+    }
+  }
+#endif
 }
