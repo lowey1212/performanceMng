@@ -25,7 +25,13 @@
 #include "Materials/MaterialInterface.h"
 #include "MeshUtilities.h"
 #include "Modules/ModuleManager.h"
+#if WITH_CUSTOMIZABLE_OBJECT
+#if __has_include("MutableRuntime/MuCO/MutableRuntimeUtilities.h")
+#include "MutableRuntime/MuCO/MutableRuntimeUtilities.h"
+#elif __has_include("MutableRuntimeUtilities.h")
 #include "MutableRuntimeUtilities.h"
+#endif
+#endif
 #include "Net/UnrealNetwork.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
@@ -1202,7 +1208,7 @@ void UDAI_PerfMngrComponent::MergeStaticMeshes() {
       }
     }
   }
-#else
+#elif WITH_CUSTOMIZABLE_OBJECT
   UStaticMesh *MergedMesh =
       UMutableRuntimeUtilities::MergeStaticMeshComponents(MeshComponents);
 
