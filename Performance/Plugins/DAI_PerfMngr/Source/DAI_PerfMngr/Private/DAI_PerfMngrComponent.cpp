@@ -1275,4 +1275,49 @@ void UDAI_PerfMngrComponent::ApplyMutableCombination() {
                                                 MutableMaterialSlots[MatIdx]);
     }
   }
+
+#if WITH_EDITOR
+  if (bDebugMutableCombination && GEngine) {
+    FString MeshInfo = TEXT("None");
+    for (auto &Pair : MutableMeshSlots) {
+      if (MutableTags.Contains(Pair.Key)) {
+        MeshInfo = FString::Printf(TEXT("%s -> %s"), *Pair.Key.ToString(),
+                                   Pair.Value ? *Pair.Value->GetName() : TEXT("None"));
+        break;
+      }
+    }
+
+    FString MaterialInfo;
+    for (int32 MatIdx = 0;
+         MatIdx < MutableMaterialSlots.Num() && MatIdx < SlotNames.Num();
+         ++MatIdx) {
+      if (MutableMaterialSlots[MatIdx] &&
+          MutableTags.Contains(SlotNames[MatIdx])) {
+        if (!MaterialInfo.IsEmpty()) {
+          MaterialInfo += TEXT(", ");
+        }
+        MaterialInfo += FString::Printf(TEXT("%s:%s"),
+                                        *SlotNames[MatIdx].ToString(),
+                                        *MutableMaterialSlots[MatIdx]->GetName());
+      }
+    }
+
+    GEngine->AddOnScreenDebugMessage(
+        -1, 5.f, FColor::Green,
+        FString::Printf(TEXT("Mutable mesh: %s"), *MeshInfo));
+    if (!MaterialInfo.IsEmpty()) {
+      GEngine->AddOnScreenDebugMessage(
+          -1, 5.f, FColor::Green,
+          FString::Printf(TEXT("Mutable materials: %s"), *MaterialInfo));
+    }
+
+    const bool bApplied = ResultMesh &&
+                          MutableSkeletalMeshComponent->GetSkeletalMeshAsset() ==
+                              ResultMesh;
+    GEngine->AddOnScreenDebugMessage(
+        -1, 5.f, bApplied ? FColor::Cyan : FColor::Red,
+        bApplied ? TEXT("Mesh applied to active character slot")
+                 : TEXT("Mesh NOT applied to active character slot"));
+  }
+#endif
 }
