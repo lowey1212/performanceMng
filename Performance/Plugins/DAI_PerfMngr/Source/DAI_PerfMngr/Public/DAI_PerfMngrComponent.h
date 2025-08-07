@@ -18,19 +18,6 @@ class UDAI_ProxyHISMManager;
 class UBehaviorTreeComponent;
 class AAIController;
 
-// Optional Mutable plugin support
-#if __has_include("CustomizableSkeletalComponent.h")
-#include "CustomizableObjectInstance.h"
-#include "CustomizableObjectSystem.h"
-#include "CustomizableSkeletalComponent.h"
-#define WITH_CUSTOMIZABLE_OBJECT 1
-#else
-#define WITH_CUSTOMIZABLE_OBJECT 0
-class UCustomizableObjectInstance;
-class UCustomizableSkeletalComponent;
-class UCustomizableObjectSystem;
-#endif
-
 /**
  * @brief Component that automatically swaps an actor between "full" and "proxy"
  * representations based on how important (significant) the actor is to the
@@ -489,22 +476,6 @@ public:
                     GetOptions = "GetMutableTagOptions"))
   TArray<FName> MutableTags;
 
-#if WITH_CUSTOMIZABLE_OBJECT
-  /** Enable runtime Mutable generation for crowd characters. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Mutable",
-            meta = (ToolTip = "If true, uses a Mutable instance to generate a \nunique skeletal mesh when this actor is significant."))
-  bool bEnableMutableCrowd = false;
-
-  /** Mutable instance used to create this actor's high detail mesh. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Mutable",
-            meta = (EditCondition = "bEnableMutableCrowd", ToolTip = "Customizable Object Instance providing parameter data for generation."))
-  UCustomizableObjectInstance* MutableInstance = nullptr;
-
-  /** Component that swaps in the generated Mutable mesh when ready. */
-  UPROPERTY(Transient)
-  UCustomizableSkeletalComponent* MutableComponent = nullptr;
-#endif
-
 #if WITH_EDITORONLY_DATA
   /** Print information about Mutable combinations to the screen for debugging. Editor only. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Mutable",
@@ -597,11 +568,4 @@ protected:
   void MergeStaticMeshes();
   /** Ensures only one visual representation is active at any time. */
   void EnsureSingleRepresentation();
-
-#if WITH_CUSTOMIZABLE_OBJECT
-  /** Attach and update the Mutable skeletal mesh when high detail is needed. */
-  void ActivateMutable();
-  /** Release Mutable resources and detach the component when not needed. */
-  void DeactivateMutable();
-#endif
 };
