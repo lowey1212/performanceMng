@@ -521,13 +521,6 @@ public:
                     GetOptions = "GetMutableTagOptions"))
   TArray<FName> MutableTags;
 
-#if WITH_EDITORONLY_DATA
-  /** Print information about Mutable combinations to the screen for debugging. Editor only. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Mutable",
-            meta = (ToolTip = "If true, shows on-screen debug info about which meshes and materials were combined."))
-  bool bDebugMutableCombination = false;
-#endif
-
   /** Gather available mesh and material tags for editor drop-downs. */
   UFUNCTION(BlueprintCallable, Category = "PerfMngr|Mutable")
   TArray<FName> GetMutableTagOptions() const;
