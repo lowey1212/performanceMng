@@ -14,7 +14,6 @@
 #include "DAI_ProxyHISMManager.h"
 #include "DrawDebugHelpers.h"
 #include "Engine/Engine.h"
-#include "Engine/MeshMerging.h"
 #include "Engine/SkeletalMesh.h"
 #include "GameFramework/Actor.h"
 #include "GameFramework/Character.h"
@@ -23,8 +22,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
+#include "Engine/MeshMerging.h"
 #include "MeshUtilities.h"
 #include "Modules/ModuleManager.h"
+#include "UObject/Package.h"
 #include "Net/UnrealNetwork.h"
 #include "NiagaraComponent.h"
 #include "NiagaraFunctionLibrary.h"
@@ -32,7 +33,6 @@
 #include "ProxyHISMRootActor.h"
 #include "SignificanceManager.h"
 #include "TimerManager.h"
-#include "UObject/Package.h"
 
 // Significance Helper (needs to be above UDAI_PerfMngrComponent::BeginPlay)
 static float
@@ -1175,47 +1175,15 @@ void UDAI_PerfMngrComponent::MergeStaticMeshes() {
 #endif
 }
 
-TArray<FName> UDAI_PerfMngrComponent::GetMutableTagOptions() const {
-  TArray<FName> Tags;
-
-  if (const AActor *Owner = GetOwner()) {
-    TArray<UMeshComponent *> MeshComponents;
-    Owner->GetComponents<UMeshComponent>(MeshComponents);
-    for (UMeshComponent *Comp : MeshComponents) {
-      if (!Comp) {
-        continue;
-      }
-
-      if (USkeletalMeshComponent *SkelComp =
-              Cast<USkeletalMeshComponent>(Comp)) {
-        if (USkeletalMesh *SkelMesh = SkelComp->GetSkeletalMeshAsset()) {
-          Tags.AddUnique(SkelMesh->GetFName());
-          const TArray<FName> &SlotNames = SkelMesh->GetMaterialSlotNames();
-          for (const FName &Name : SlotNames) {
-            Tags.AddUnique(Name);
-          }
-        }
-      } else if (UStaticMeshComponent *StaticComp =
-                     Cast<UStaticMeshComponent>(Comp)) {
-        if (UStaticMesh *StaticMesh = StaticComp->GetStaticMesh()) {
-          Tags.AddUnique(StaticMesh->GetFName());
-          const TArray<FName> &SlotNames = StaticMesh->GetMaterialSlotNames();
-          for (const FName &Name : SlotNames) {
-            Tags.AddUnique(Name);
-          }
-        }
-      }
-    }
-  }
-
-  return Tags;
-}
-
 void UDAI_PerfMngrComponent::UpdateMutableMeshSlot(FName SlotName,
-                                                   USkeletalMesh *NewMesh) {
-  if (NewMesh) {
+                                                   USkeletalMesh* NewMesh)
+{
+  if (NewMesh)
+  {
     MutableMeshSlots.Add(SlotName, NewMesh);
-  } else {
+  }
+  else
+  {
     MutableMeshSlots.Remove(SlotName);
   }
 
@@ -1223,8 +1191,10 @@ void UDAI_PerfMngrComponent::UpdateMutableMeshSlot(FName SlotName,
 }
 
 void UDAI_PerfMngrComponent::UpdateMutableMaterialSlot(
-    int32 MaterialIndex, UMaterialInterface *NewMaterial) {
-  if (MutableMaterialSlots.Num() <= MaterialIndex) {
+    int32 MaterialIndex, UMaterialInterface* NewMaterial)
+{
+  if (MutableMaterialSlots.Num() <= MaterialIndex)
+  {
     MutableMaterialSlots.SetNum(MaterialIndex + 1);
   }
   MutableMaterialSlots[MaterialIndex] = NewMaterial;
@@ -1232,47 +1202,39 @@ void UDAI_PerfMngrComponent::UpdateMutableMaterialSlot(
   ApplyMutableCombination();
 }
 
-void UDAI_PerfMngrComponent::ApplyMutableCombination() {
-  if (!MutableSkeletalMeshComponent) {
-    if (AActor *Owner = GetOwner()) {
+void UDAI_PerfMngrComponent::ApplyMutableCombination()
+{
+  if (!MutableSkeletalMeshComponent)
+  {
+    if (AActor* Owner = GetOwner())
+    {
       MutableSkeletalMeshComponent =
           Owner->FindComponentByClass<USkeletalMeshComponent>();
     }
   }
-  if (!MutableSkeletalMeshComponent) {
+  if (!MutableSkeletalMeshComponent)
+  {
     return;
   }
 
-  USkeletalMesh *ResultMesh = nullptr;
-  for (auto &Pair : MutableMeshSlots) {
-    if (MutableTags.Contains(Pair.Key)) {
-      ResultMesh = Pair.Value;
-      break;
-    }
+  USkeletalMesh* ResultMesh = nullptr;
+  for (auto& Pair : MutableMeshSlots)
+  {
+    ResultMesh = Pair.Value;
+    break;
   }
 
-  if (ResultMesh) {
+  if (ResultMesh)
+  {
     MutableSkeletalMeshComponent->SetSkeletalMesh(ResultMesh);
   }
 
-  TArray<FName> SlotNames;
-  if (USkeletalMesh *SkelMesh =
-          MutableSkeletalMeshComponent->GetSkeletalMeshAsset()) {
-    SlotNames = SkelMesh->GetMaterialSlotNames();
-  } else if (UStaticMeshComponent *StaticComp =
-                 Cast<UStaticMeshComponent>(MutableSkeletalMeshComponent)) {
-    if (UStaticMesh *StaticMesh = StaticComp->GetStaticMesh()) {
-      SlotNames = StaticMesh->GetMaterialSlotNames();
-    }
-  }
-
-  for (int32 MatIdx = 0;
-       MatIdx < MutableMaterialSlots.Num() && MatIdx < SlotNames.Num();
-       ++MatIdx) {
-    if (MutableMaterialSlots[MatIdx] &&
-        MutableTags.Contains(SlotNames[MatIdx])) {
+  for (int32 MatIdx = 0; MatIdx < MutableMaterialSlots.Num(); ++MatIdx)
+  {
+    if (MutableMaterialSlots[MatIdx])
+    {
       MutableSkeletalMeshComponent->SetMaterial(MatIdx,
-                                                MutableMaterialSlots[MatIdx]);
+                                               MutableMaterialSlots[MatIdx]);
     }
   }
 }
