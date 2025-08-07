@@ -11,11 +11,7 @@ public class DAI_PerfMngr : ModuleRules {
                        "SignificanceManager", "UMG", "AIModule", "Niagara",
                        "HairStrandsCore", "AudioMixer" });
 
-    string MutablePath = Path.Combine(EngineDirectory,
-        "Plugins/Experimental/Mutable/Source/MutableRuntime");
-    if (Directory.Exists(MutablePath)) {
-      PrivateDependencyModuleNames.Add("MutableRuntime");
-    }
+    PrivateDependencyModuleNames.Add("MutableRuntime");
 
     PublicIncludePaths.AddRange(new string[] {
       Path.Combine(EngineDirectory, "Plugins/Runtime/SignificanceManager/" +
