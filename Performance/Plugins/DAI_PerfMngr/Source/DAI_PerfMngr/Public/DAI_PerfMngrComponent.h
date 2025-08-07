@@ -493,13 +493,15 @@ public:
   UPROPERTY(
       EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Mutable",
       meta =
-          (ToolTip = "If true, uses a Mutable instance to generate a \nunique \n skeletal mesh when this actor is significant."))
+          (ToolTip = "If true, uses a Mutable instance to generate a \nunique "
+                     "skeletal mesh when this actor is significant."))
   bool bEnableMutableCrowd = false;
 
   /** Mutable instance used to create this actor's high detail mesh. */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Mutable",
             meta = (EditCondition = "bEnableMutableCrowd",
-                    ToolTip = "Customizable Object Instance providing \n parameter data for generation."))
+                    ToolTip = "Customizable Object Instance providing "
+                              "parameter data for generation."))
   UCustomizableObjectInstance *MutableInstance = nullptr;
 
   /** Component that swaps in the generated Mutable mesh when ready. */
