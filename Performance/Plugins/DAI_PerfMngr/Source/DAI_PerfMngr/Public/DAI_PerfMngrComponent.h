@@ -368,13 +368,6 @@ public:
             meta = (ToolTip = "Colorize meshes by their significance value (debug/visualization)."))
   bool bColorizeBySignificance = false;
 
-  /** If true, collect all static mesh components and merge them into a single
-   * mesh and material using the Mutable plugin. */
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PerfMngr|Proxy",
-            meta = (ToolTip =
-                        "Gather all static meshes on the owner and merge them into one mesh/material via the Mutable plugin."))
-  bool bMergeStaticMeshes = false;
-
   /** Rules that decide which components to temporarily turn off at low
    * significance. */
   UPROPERTY(
@@ -515,8 +508,6 @@ protected:
   void HandleBillboardProxySwap(float DeltaTime, float Significance);
   /** Handles particle proxy enter/exit based on significance. */
   void HandleParticleProxySwap(float DeltaTime, float Significance);
-  /** Optionally merge all static mesh components into a single mesh. */
-  void MergeStaticMeshes();
   /** Ensures only one visual representation is active at any time. */
   void EnsureSingleRepresentation();
 };

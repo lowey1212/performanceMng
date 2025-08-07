@@ -32,10 +32,5 @@ public class DAI_PerfMngr : ModuleRules
         {
             PublicDependencyModuleNames.Add("IrisCore");
         }
-
-        if (Target.bBuildEditor)
-        {
-            PrivateDependencyModuleNames.Add("MeshUtilities");
-        }
     }
 }

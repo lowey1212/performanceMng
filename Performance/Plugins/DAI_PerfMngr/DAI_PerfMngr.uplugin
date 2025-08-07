@@ -24,10 +24,6 @@
     {
         "Name": "HairStrands",
         "Enabled": true
-     },
-    {
-      "Name": "Mutable",
-      "Enabled": true
-    }
+     }
   ]
 }
