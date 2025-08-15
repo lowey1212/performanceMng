@@ -1,12 +1,12 @@
-"F:\PluginTest\Performance\Plugins\DAI_PerfMngr\DAI_PerfMngr\Intermediate\Build\Win64\x64\UnrealEditor\Development\DAI_PerfMngr\Module.DAI_PerfMngr.cpp"
-/FI"F:\PluginTest\Performance\Intermediate\Build\Win64\x64\PerformanceEditor\Development\UnrealEd\SharedPCH.UnrealEd.Project.ValApi.Cpp20.h"
-/FI"F:\PluginTest\Performance\Plugins\DAI_PerfMngr\DAI_PerfMngr\Intermediate\Build\Win64\x64\UnrealEditor\Development\DAI_PerfMngr\Definitions.DAI_PerfMngr.h"
-/Yu"F:\PluginTest\Performance\Intermediate\Build\Win64\x64\PerformanceEditor\Development\UnrealEd\SharedPCH.UnrealEd.Project.ValApi.Cpp20.h"
-/Fp"F:\PluginTest\Performance\Intermediate\Build\Win64\x64\PerformanceEditor\Development\UnrealEd\SharedPCH.UnrealEd.Project.ValApi.Cpp20.h.pch"
-/Fo"F:\PluginTest\Performance\Plugins\DAI_PerfMngr\DAI_PerfMngr\Intermediate\Build\Win64\x64\UnrealEditor\Development\DAI_PerfMngr\Module.DAI_PerfMngr.cpp.obj"
-/experimental:log "F:\PluginTest\Performance\Plugins\DAI_PerfMngr\DAI_PerfMngr\Intermediate\Build\Win64\x64\UnrealEditor\Development\DAI_PerfMngr\Module.DAI_PerfMngr.cpp.sarif"
-/sourceDependencies "F:\PluginTest\Performance\Plugins\DAI_PerfMngr\DAI_PerfMngr\Intermediate\Build\Win64\x64\UnrealEditor\Development\DAI_PerfMngr\Module.DAI_PerfMngr.cpp.dep.json"
-@"F:\PluginTest\Performance\Plugins\DAI_PerfMngr\DAI_PerfMngr\Intermediate\Build\Win64\x64\UnrealEditor\Development\DAI_PerfMngr\DAI_PerfMngr.Shared.rsp"
+"F:\githubdesktop\performanceMng\Performance\Plugins\DAI_PerfMngr\Intermediate\Build\Win64\x64\UnrealEditor\Development\DAI_PerfMngr\Module.DAI_PerfMngr.cpp"
+/FI"F:\githubdesktop\performanceMng\Performance\Intermediate\Build\Win64\x64\PerformanceEditor\Development\UnrealEd\SharedPCH.UnrealEd.Project.ValApi.Cpp20.h"
+/FI"F:\githubdesktop\performanceMng\Performance\Plugins\DAI_PerfMngr\Intermediate\Build\Win64\x64\UnrealEditor\Development\DAI_PerfMngr\Definitions.DAI_PerfMngr.h"
+/Yu"F:\githubdesktop\performanceMng\Performance\Intermediate\Build\Win64\x64\PerformanceEditor\Development\UnrealEd\SharedPCH.UnrealEd.Project.ValApi.Cpp20.h"
+/Fp"F:\githubdesktop\performanceMng\Performance\Intermediate\Build\Win64\x64\PerformanceEditor\Development\UnrealEd\SharedPCH.UnrealEd.Project.ValApi.Cpp20.h.pch"
+/Fo"F:\githubdesktop\performanceMng\Performance\Plugins\DAI_PerfMngr\Intermediate\Build\Win64\x64\UnrealEditor\Development\DAI_PerfMngr\Module.DAI_PerfMngr.cpp.obj"
+/experimental:log "F:\githubdesktop\performanceMng\Performance\Plugins\DAI_PerfMngr\Intermediate\Build\Win64\x64\UnrealEditor\Development\DAI_PerfMngr\Module.DAI_PerfMngr.cpp.sarif"
+/sourceDependencies "F:\githubdesktop\performanceMng\Performance\Plugins\DAI_PerfMngr\Intermediate\Build\Win64\x64\UnrealEditor\Development\DAI_PerfMngr\Module.DAI_PerfMngr.cpp.dep.json"
+@"F:\githubdesktop\performanceMng\Performance\Plugins\DAI_PerfMngr\Intermediate\Build\Win64\x64\UnrealEditor\Development\DAI_PerfMngr\DAI_PerfMngr.Shared.rsp"
 /d2ssa-cfg-question-
 /Zc:inline
 /nologo

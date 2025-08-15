@@ -901,14 +901,14 @@ struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics
 		{ "Category", "PerfMngr|Proxy|Billboard" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 #if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Billboard mesh used when significance is very low. Only used if no Niagara effect is set. Niagara with a sprite renderer (Face Camera alignment) is preferred." },
+		{ "ToolTip", "Billboard mesh used when significance is very low. Can be batched via HISM for large crowds. Ignored if ProxyBillboardEffect is set." },
 #endif
 	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ProxyBillboardEffect_MetaData[] = {
 		{ "Category", "PerfMngr|Proxy|Billboard" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 #if !UE_BUILD_SHIPPING
-		{ "ToolTip", "Niagara effect used for billboard proxies. Preferred method when using a sprite renderer billboard with Face Camera alignment. Only one of this or ProxyBillboardMesh should be set." },
+		{ "ToolTip", "Sprite Niagara effect to use instead of the static billboard mesh. Faces the camera automatically and is cheaper when Niagara is present." },
 #endif
 	};
 	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ProxyParticleEffect_MetaData[] = {
@@ -1083,11 +1083,11 @@ struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics
 		{ "EditInline", "true" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 	};
-	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_BillboardEffectComponent_MetaData[] = {
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ProxyEffectComponent_MetaData[] = {
 		{ "EditInline", "true" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 	};
-	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_ProxyEffectComponent_MetaData[] = {
+	static constexpr UECodeGen_Private::FMetaDataPairParam NewProp_BillboardEffectComponent_MetaData[] = {
 		{ "EditInline", "true" },
 		{ "ModuleRelativePath", "Public/DAI_PerfMngrComponent.h" },
 	};
@@ -1150,8 +1150,8 @@ struct Z_Construct_UClass_UDAI_PerfMngrComponent_Statics
 	static const UECodeGen_Private::FObjectPropertyParams NewProp_ProxyMeshComponent;
 	static const UECodeGen_Private::FObjectPropertyParams NewProp_ProxyHairMeshComponent;
 	static const UECodeGen_Private::FObjectPropertyParams NewProp_BillboardMeshComponent;
-	static const UECodeGen_Private::FObjectPropertyParams NewProp_BillboardEffectComponent;
 	static const UECodeGen_Private::FObjectPropertyParams NewProp_ProxyEffectComponent;
+	static const UECodeGen_Private::FObjectPropertyParams NewProp_BillboardEffectComponent;
 	static const UECodeGen_Private::FMulticastDelegatePropertyParams NewProp_OnProxyEntered;
 	static const UECodeGen_Private::FMulticastDelegatePropertyParams NewProp_OnProxyExited;
 	static const UECodeGen_Private::FPropertyParamsBase* const PropPointers[];
@@ -1235,8 +1235,8 @@ const UECodeGen_Private::FFloatPropertyParams Z_Construct_UClass_UDAI_PerfMngrCo
 const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyMeshComponent = { "ProxyMeshComponent", nullptr, (EPropertyFlags)0x0010000000082008, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyMeshComponent), Z_Construct_UClass_UStaticMeshComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyMeshComponent_MetaData), NewProp_ProxyMeshComponent_MetaData) };
 const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyHairMeshComponent = { "ProxyHairMeshComponent", nullptr, (EPropertyFlags)0x0010000000082008, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyHairMeshComponent), Z_Construct_UClass_UStaticMeshComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyHairMeshComponent_MetaData), NewProp_ProxyHairMeshComponent_MetaData) };
 const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardMeshComponent = { "BillboardMeshComponent", nullptr, (EPropertyFlags)0x0010000000082008, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, BillboardMeshComponent), Z_Construct_UClass_UStaticMeshComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_BillboardMeshComponent_MetaData), NewProp_BillboardMeshComponent_MetaData) };
-const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardEffectComponent = { "BillboardEffectComponent", nullptr, (EPropertyFlags)0x0010000000082008, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, BillboardEffectComponent), Z_Construct_UClass_UNiagaraComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_BillboardEffectComponent_MetaData), NewProp_BillboardEffectComponent_MetaData) };
 const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyEffectComponent = { "ProxyEffectComponent", nullptr, (EPropertyFlags)0x0010000000082008, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, ProxyEffectComponent), Z_Construct_UClass_UNiagaraComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_ProxyEffectComponent_MetaData), NewProp_ProxyEffectComponent_MetaData) };
+const UECodeGen_Private::FObjectPropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardEffectComponent = { "BillboardEffectComponent", nullptr, (EPropertyFlags)0x0010000000082008, UECodeGen_Private::EPropertyGenFlags::Object, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, BillboardEffectComponent), Z_Construct_UClass_UNiagaraComponent_NoRegister, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_BillboardEffectComponent_MetaData), NewProp_BillboardEffectComponent_MetaData) };
 const UECodeGen_Private::FMulticastDelegatePropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_OnProxyEntered = { "OnProxyEntered", nullptr, (EPropertyFlags)0x0010000010080000, UECodeGen_Private::EPropertyGenFlags::InlineMulticastDelegate, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, OnProxyEntered), Z_Construct_UDelegateFunction_DAI_PerfMngr_OnProxyEnteredSignature__DelegateSignature, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_OnProxyEntered_MetaData), NewProp_OnProxyEntered_MetaData) }; // 3185369196
 const UECodeGen_Private::FMulticastDelegatePropertyParams Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_OnProxyExited = { "OnProxyExited", nullptr, (EPropertyFlags)0x0010000010080000, UECodeGen_Private::EPropertyGenFlags::InlineMulticastDelegate, RF_Public|RF_Transient|RF_MarkAsNative, nullptr, nullptr, 1, STRUCT_OFFSET(UDAI_PerfMngrComponent, OnProxyExited), Z_Construct_UDelegateFunction_DAI_PerfMngr_OnProxyExitedSignature__DelegateSignature, METADATA_PARAMS(UE_ARRAY_COUNT(NewProp_OnProxyExited_MetaData), NewProp_OnProxyExited_MetaData) }; // 2929129087
 const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::PropPointers[] = {
@@ -1280,8 +1280,8 @@ const UECodeGen_Private::FPropertyParamsBase* const Z_Construct_UClass_UDAI_Perf
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyMeshComponent,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyHairMeshComponent,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardMeshComponent,
-	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardEffectComponent,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_ProxyEffectComponent,
+	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_BillboardEffectComponent,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_OnProxyEntered,
 	(const UECodeGen_Private::FPropertyParamsBase*)&Z_Construct_UClass_UDAI_PerfMngrComponent_Statics::NewProp_OnProxyExited,
 };
@@ -1335,10 +1335,10 @@ struct Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugin
 		{ FComponentSuppressionRule::StaticStruct, Z_Construct_UScriptStruct_FComponentSuppressionRule_Statics::NewStructOps, TEXT("ComponentSuppressionRule"), &Z_Registration_Info_UScriptStruct_ComponentSuppressionRule, CONSTRUCT_RELOAD_VERSION_INFO(FStructReloadVersionInfo, sizeof(FComponentSuppressionRule), 3872704499U) },
 	};
 	static constexpr FClassRegisterCompiledInInfo ClassInfo[] = {
-		{ Z_Construct_UClass_UDAI_PerfMngrComponent, UDAI_PerfMngrComponent::StaticClass, TEXT("UDAI_PerfMngrComponent"), &Z_Registration_Info_UClass_UDAI_PerfMngrComponent, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UDAI_PerfMngrComponent), 1673118825U) },
+		{ Z_Construct_UClass_UDAI_PerfMngrComponent, UDAI_PerfMngrComponent::StaticClass, TEXT("UDAI_PerfMngrComponent"), &Z_Registration_Info_UClass_UDAI_PerfMngrComponent, CONSTRUCT_RELOAD_VERSION_INFO(FClassReloadVersionInfo, sizeof(UDAI_PerfMngrComponent), 3499482244U) },
 	};
 };
-static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_2007879868(TEXT("/Script/DAI_PerfMngr"),
+static FRegisterCompiledInInfo Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_3434541712(TEXT("/Script/DAI_PerfMngr"),
 	Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::ClassInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::ClassInfo),
 	Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::ScriptStructInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::ScriptStructInfo),
 	Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::EnumInfo, UE_ARRAY_COUNT(Z_CompiledInDeferFile_FID_githubdesktop_performanceMng_Performance_Plugins_DAI_PerfMngr_Source_DAI_PerfMngr_Public_DAI_PerfMngrComponent_h_Statics::EnumInfo));

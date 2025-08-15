@@ -23,13 +23,13 @@ void EmptyLinkFunctionForGeneratedCodeDAI_PerfMngr_init() {}
 				SingletonFuncArray,
 				UE_ARRAY_COUNT(SingletonFuncArray),
 				PKG_CompiledIn | 0x00000000,
-				0x8B7CAC91,
-				0xA2D7E65C,
+				0xBF20F1A4,
+				0xD092E802,
 				METADATA_PARAMS(0, nullptr)
 			};
 			UECodeGen_Private::ConstructUPackage(Z_Registration_Info_UPackage__Script_DAI_PerfMngr.OuterSingleton, PackageParams);
 		}
 		return Z_Registration_Info_UPackage__Script_DAI_PerfMngr.OuterSingleton;
 	}
-	static FRegisterCompiledInInfo Z_CompiledInDeferPackage_UPackage__Script_DAI_PerfMngr(Z_Construct_UPackage__Script_DAI_PerfMngr, TEXT("/Script/DAI_PerfMngr"), Z_Registration_Info_UPackage__Script_DAI_PerfMngr, CONSTRUCT_RELOAD_VERSION_INFO(FPackageReloadVersionInfo, 0x8B7CAC91, 0xA2D7E65C));
+	static FRegisterCompiledInInfo Z_CompiledInDeferPackage_UPackage__Script_DAI_PerfMngr(Z_Construct_UPackage__Script_DAI_PerfMngr, TEXT("/Script/DAI_PerfMngr"), Z_Registration_Info_UPackage__Script_DAI_PerfMngr, CONSTRUCT_RELOAD_VERSION_INFO(FPackageReloadVersionInfo, 0xBF20F1A4, 0xD092E802));
 PRAGMA_ENABLE_DEPRECATION_WARNINGS

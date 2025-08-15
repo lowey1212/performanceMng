@@ -6,6 +6,7 @@
 			"DAI_PerfMngrComponent.gen.cpp.obj",
 			"DAI_PerfMngrWorldSubsystem.gen.cpp.obj",
 			"DAI_ProxyHISMManager.gen.cpp.obj",
+			"PerformanceComponentManager.gen.cpp.obj",
 			"ProxyHISMRootActor.gen.cpp.obj",
 			"SignificanceManagerLibrary.gen.cpp.obj",
 			"PerModuleInline.gen.cpp.obj",
@@ -13,6 +14,7 @@
 			"DAI_PerfMngrComponent.cpp.obj",
 			"DAI_PerfMngrWorldSubsystem.cpp.obj",
 			"DAI_ProxyHISMManager.cpp.obj",
+			"PerformanceComponentManager.cpp.obj",
 			"ProxyHISMRootActor.cpp.obj",
 			"SignificanceManagerLibrary.cpp.obj",
 			"SignificanceUtility.cpp.obj"
