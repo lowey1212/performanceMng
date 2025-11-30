@@ -67,9 +67,17 @@ Notable related docs:
 - Keep public APIs and docs in sync (update both `docs/plugins` and in-plugin `Docs/` where relevant).
 - Prefer performance-oriented implementations and budget-aware patterns when adding new systems.
 
-## License
+## License & Ownership
 
-This repository is provided for demonstration and integration of the DAI Performance Manager and related plugins. Refer to the repository license file (if present) or contact the maintainer for usage terms.
+- This repository is an **example Unreal Engine 5 project** intended to demonstrate how to integrate and drive the DAI Performance Manager plugin in a real game project.
+- The **DAI_PerfMngr plugin itself is a separate, owned plugin**. You must legally own/access that plugin (e.g., from its distribution channel or private license) to use it beyond this example.
+- The plugin source is currently present in this project only to allow **automatic documentation generation and validation** and may be removed from the repository shortly after docs are finalized. Future clones of this repo may ship **without the plugin source**, expecting you to drop in your licensed copy under `Performance/Plugins/`.
+
+This project is built on **Unreal Engine 5.5** and is subject to the standard **Unreal Engine End User License Agreement (EULA)**. Use of Unreal Engine binaries, headers, and associated content must comply with the official Epic Games license terms:
+
+- See the official Unreal Engine EULA at: https://www.unrealengine.com/eula
+
+Any additional licensing terms for the DAI_PerfMngr plugin or related DAI plugins are governed by their own agreements and are **separate from** the Unreal Engine EULA.
 
 ---
 _Last updated: November 30, 2025_  
