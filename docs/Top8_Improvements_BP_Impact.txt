@@ -1,0 +1,266 @@
+Top 8 Architectural / Quality Improvements (Detailed Breakdown)
+================================================================
+Scope: DAI_Map (and analogous DAI_* plugins) — focus on soft hub integration, serialization, runtime performance, and Blueprint (BP) surface impact.
+Audience: C++ plugin maintainers & technical designers consuming Blueprint APIs.
+Date: 2025-09-28
+
+Legend:
+- BP Impact Levels: None | Additive | Behavioral | Breaking (with mitigation)
+- Effort: S (1–2h), M (0.5–2 days), L (multi-day / multi-plugin)
+
+------------------------------------------------------------------------
+1. Cache & Interface-ify Hub Access
+------------------------------------------------------------------------
+Current State:
+  - Each broadcast/registration performs UClass::TryFindTypeSlow + GetSubsystemBase + FindFunctionByName.
+  - Per-event string lookups and reflection overhead.
+  - No compile-time contract (silent no-ops if signatures drift).
+
+Why (Rationale):
+  - Performance: Repeated reflection & string lookup adds CPU overhead (especially in POI hot paths or fog batch flushes).
+  - Maintainability: Hard to grep for hub contract. Typos in function names only fail at runtime.
+  - Safety: No typed parameter validation; shape changes can silently drop events.
+  - Aligns with Epic guidance on using interfaces / modular features instead of ad-hoc reflection loops.
+
+Proposed Approach:
+  A. Introduce a lightweight pure interface header (e.g., IDAIHubServiceBridge) in a tiny runtime-neutral module OR use IModularFeatures registration.
+  B. On first use, cache a TWeakObjectPtr<UWorldSubsystem> HubPtr. Refresh only on World change or invalidation.
+  C. Replace EventName as FString with FName constants; expose a thin inline wrapper BroadcastHubEvent(FName, const FHubEventPayload&).
+  D. Provide fallback: if interface module absent, compiled stubs remain no-ops (no hard dependency added to existing plugins by using optional module referencing pattern / build.cs soft path).
+
+Blueprint Impact:
+  - Level: Additive (optional) if we add a BlueprintCallable library: BroadcastHubEvent, IsHubAvailable, GetRegisteredServices.
+  - Existing BP scripts relying on side effects remain unchanged (reflection helpers still present initially for backward compatibility behind #ifdef DAI_LEGACY_HUB_REFLECTION).
+  - Potential new BP events: OnHubEventReceived (typed) enabling designers to bind without string parsing.
+
+Risks & Mitigation:
+  - Risk: Introducing interface module could accidentally create a hard dependency chain.
+  - Mitigation: Isolate interface to its own minimal plugin flagged as Optional / do not list in other plugin dependencies; use runtime dynamic load (FModuleManager::LoadModulePtr) guarded checks.
+
+Effort: M (design + code refactor + tests across 3–5 plugins).
+
+------------------------------------------------------------------------
+2. Add Fragment Versioning + Stronger Integrity Hashing
+------------------------------------------------------------------------
+Current State:
+  - Map fragment JSON lacks explicit schema version key.
+  - Integrity uses MD5 (from earlier Save system description) for overall payload; MD5 is weak for collision resistance.
+
+Why:
+  - Forward Compatibility: Allows schema migrations per fragment (MapService v2 adds extra POI metadata without breaking older saves).
+  - Robustness: Stronger hashing (SHA-256) or HMAC-SHA-256 prevents tampering; matches Epic security recommendations for packaged content integrity.
+  - Tooling: Easier automated migration scripts keyed by SchemaVersion.
+
+Proposed Approach:
+  A. Add integer field SchemaVersion (start at 1) and array CompatibleVersions (optional) per fragment.
+  B. Save pipeline: Compute HMAC-SHA-256(signature_key, compressed_bytes) stored alongside.
+  C. On load: Validate hash first -> decompress -> parse -> route migrations (switch(version)).
+  D. Document migration contract (e.g., INewFragmentMigrator interface) for other plugins.
+
+Blueprint Impact:
+  - Level: Additive.
+  - Expose BP callable: GetSaveFragmentVersion(FragmentId), IsFragmentCompatible(FragmentId, Version).
+  - No existing BP breaks if underlying JSON structure is internal.
+
+Risks & Mitigation:
+  - Risk: Larger save meta overhead from extra fields.
+  - Mitigation: Compress after adding version fields; negligible size difference.
+
+Effort: M (core save changes + test + doc).
+
+------------------------------------------------------------------------
+3. Replace uint16 Folded Section IDs (Collision-Free Scheme)
+------------------------------------------------------------------------
+Current State:
+  - Fog sections hash (X,Y) -> 32-bit -> fold to uint16 (Hash ^ Hash>>16). Collisions inevitable for large grids.
+
+Why:
+  - Data Integrity: Collisions could incorrectly mark distinct sections as revealed.
+  - Scalability: Larger worlds (Large World Coordinates) exceed safe unique count.
+  - Analytics fidelity: Reveal percentage becomes skewed.
+
+Proposed Approach:
+  Option A: Maintain raw int32 X,Y pair in a struct FSectionCoord {int32 X; int32 Y;} and store in TSet<FSectionCoord> (with custom hash). Export arrays of pairs.
+  Option B: Use 32-bit Morton (Z-order) encoding without truncation (uint32 Id = Interleave(Xbits, Ybits)).
+  - Migration: On load of legacy save (SchemaVersion<2), reinterpret older 16-bit IDs via a reverse map heuristic (if feasible) or mark as legacy-limited.
+  - Add config limiting max grid range or dynamic expansion.
+
+Blueprint Impact:
+  - Level: Behavioral (IDs change type/size if currently exposed as int32/uint16).
+  - Mitigation: Provide wrapper BP functions accepting old int32 SectionId for backward compatibility while deprecating them (UE_DEPRECATED macro in C++ + metadata DeprecationMessage).
+
+Risks & Mitigation:
+  - Risk: Save incompatibility.
+  - Mitigation: Versioned loader; optionally re-save after migration; log advisory once.
+
+Effort: M (data structure swap + migration logic + tests).
+
+------------------------------------------------------------------------
+4. Introduce GameplayTag-Based Event Identifiers
+------------------------------------------------------------------------
+Current State:
+  - Event names are raw strings ("Map.SectionRevealed", "Map.POI.Registered").
+  - Consumer filtering requires string compares / manual prefix parsing.
+
+Why:
+  - Performance: FGameplayTag comparisons are faster, memory-stable.
+  - Tooling: Tag browser, hierarchical filtering, DataTable configuration.
+  - Consistency: Align with existing tag-driven systems (Spawner uses tags for spawn events already).
+
+Proposed Approach:
+  A. Define Tag Namespace in a central tag config (DefaultGameplayTags.ini): DAI.Event.Map.SectionRevealed, DAI.Event.Map.POI.Registered, etc.
+  B. Broadcast events using FGameplayTag plus an optional payload struct (no TMap<FString,FString>). Keep string fallback for legacy listeners.
+  C. Provide BP dispatcher OnHubTagEvent(FGameplayTag EventTag, FHubEventPayload Payload).
+
+Blueprint Impact:
+  - Level: Additive (stronger), potential mild Behavioral if designers switch to tag events.
+  - New BP nodes: ConvertEventNameToTag (legacy bridging), RegisterForHubTagEvent.
+  - Deprecate string-based Bindings with metadata + warning logs (one-time).
+
+Risks & Mitigation:
+  - Risk: Tag config maintenance overhead.
+  - Mitigation: Automated Tag list generation script; documentation table.
+
+Effort: M.
+
+------------------------------------------------------------------------
+5. Optimize RadiusReveal (Performance & Scaling)
+------------------------------------------------------------------------
+Current State:
+  - Every tick: For each pawn iterate grid square bounding box, distance check per cell, repeated CVar polling, potential large O(N * Cells) loops.
+
+Why:
+  - Performance overhead in large maps or many players.
+  - Cache-friendly optimization reduces spikes (good for frame pacing & Hitches stats).
+  - Energy saving on platforms / mobile (if applicable).
+
+Proposed Approach:
+  A. Movement Threshold: Only recompute if pawn moved > (SectionSize * 0.3) since last reveal pass.
+  B. Precomputed Offsets: Pre-build a list of relative section offsets within Radius (circle mask) once per distinct radius (quantize value).
+  C. Batched Add: Use a local array, reserve exact capacity; avoid TSet.Contains calls by marking a bitset (if switching to Morton IDs) before final commit.
+  D. CVar Callbacks: Replace per-tick RefreshCoalesce* polling with OnChanged delegates updating cached values.
+  E. Optional budget: Limit new reveals per frame to a max (e.g., 512) and queue remainder.
+
+Blueprint Impact:
+  - Level: None (internal optimization) unless exposing new BP function SetRevealBudget / GetRevealStats (Additive if desired).
+
+Risks & Mitigation:
+  - Risk: Delayed reveals if budget too low.
+  - Mitigation: Configurable budget & debug stat display.
+
+Effort: S–M.
+
+------------------------------------------------------------------------
+6. Support Replication or Explicit Single-Player Scope
+------------------------------------------------------------------------
+Current State:
+  - No replication markers; POI / fog state is local only; potential desync in multiplayer.
+
+Why:
+  - Clarity: Avoid false expectations for networked projects.
+  - Multiplayer Readiness: Minimal replication scaffolding enables future expansion.
+  - Align with Replication & Gameplay Framework docs.
+
+Proposed Approach:
+  A. Path A (Full Replication): Introduce an AMapStateActor (Authority only) using FFastArraySerializer for POIs & fog sections; clients receive delta updates.
+  B. Path B (Document Single-Player): Add UPROPERTY config flag bMapIsSinglePlayerOnly; log warning if world is networked and replication not enabled.
+  C. Provide blueprint events OnPOIAdded, OnSectionRevealed replicated context.
+
+Blueprint Impact:
+  - Level: Additive if opting for replication (new events & replicated arrays). If just documenting single-player: None.
+  - Potential Behavior: Designers may start relying on replicated events; need stable guarantees.
+
+Risks & Mitigation:
+  - Risk: Bandwidth overhead with naive full arrays.
+  - Mitigation: Delta-based arrays + optional compression for large batches.
+
+Effort: L (for full replication) / S (for documentation-only route).
+
+------------------------------------------------------------------------
+7. OnChanged Delegates for DeveloperSettings & CVar Callbacks
+------------------------------------------------------------------------
+Current State:
+  - Settings values cached only at Initialize; cvars polled periodically (RefreshCoalesceTimerIfChanged).
+
+Why:
+  - Efficiency: Eliminates per-timer/poll overhead.
+  - Responsiveness: Immediate update when designer tweaks settings in PIE.
+  - Cleaner separation of concerns (Settings -> Notifies subsystem -> adjust timers/state).
+
+Proposed Approach:
+  A. Implement PostEditChangeProperty in UDAIMapDeveloperSettings (editor only) to broadcast a static multicast delegate (e.g., FOnMapDevSettingsChanged).
+  B. In subsystem, bind once in Initialize; apply changes when delegate fires.
+  C. Register OnChanged callbacks on console variables (IConsoleVariable::SetOnChangedCallback).
+  D. Remove manual Refresh* polling code.
+
+Blueprint Impact:
+  - Level: Additive (expose BP assignable OnMapSettingsChanged if helpful for UI reactivity).
+  - No breaking changes.
+
+Risks & Mitigation:
+  - Risk: PIE-only path differing from packaged behavior.
+  - Mitigation: Provide runtime exec command to trigger reload for packaged (Map.ReloadSettings).
+
+Effort: S.
+
+------------------------------------------------------------------------
+8. Consolidated Soft Hub Integration Guidelines Doc
+------------------------------------------------------------------------
+Current State:
+  - Patterns exist but fragmented across comments in multiple subsystems (Save, Spawner, Map).
+
+Why:
+  - Consistency: Avoid divergent ad-hoc implementations when new plugins add hub hooks.
+  - Onboarding: Faster knowledge transfer for new devs.
+  - Quality: Documented event naming taxonomy reduces duplication / collisions.
+
+Proposed Approach:
+  A. Create docs/SoftHub_Integration.md summarizing: goals, interface approach (post #1), event naming (tag + fallback string), payload struct design, performance concerns, testing checklist.
+  B. Include migration table: Legacy -> Modern helpers.
+  C. Provide blueprint usage snippet & recommended naming conventions for new events.
+  D. Add decision log (ArchitecturalRecord # if using ADR style) for future revisions.
+
+Blueprint Impact:
+  - Level: None (documentation only) but enables more disciplined BP event surface.
+
+Risks & Mitigation:
+  - Risk: Doc drift if not maintained.
+  - Mitigation: Add maintenance reminder in root README or a CI doc freshness check.
+
+Effort: S.
+
+================================================================
+Consolidated Blueprint Impact Summary
+================================================================
+Additive Only: Items 1,2,4,5,7,8 (assuming transitional compatibility maintained).
+Potential Behavioral: Item 3 (ID type change) and Item 6 (if replication semantics introduced).
+No Hard Breaks required if a deprecation layer (legacy wrapper functions & compatibility macros) persists for at least one release cycle.
+
+================================================================
+Suggested Implementation Order (Balancing Risk & Reuse)
+================================================================
+1 -> 4 -> 8 (Establish interface, tag events, document) THEN 2 (versioning) THEN 3 (ID change with migration) THEN 5 (perf), 7 (settings callbacks), finally 6 (replication) if needed.
+
+================================================================
+Migration Cheat Sheet (High-Level)
+================================================================
+Legacy Broadcast: DAI_Map_TryBroadcastHubEvent(this, TEXT("Map.POI.Registered"), TEXT("MapService"), DataMap)
+Modern (Post Refactor): HubBridge->Broadcast(DAI_Event_Map_POI_Registered_Tag, FHubEventPayload::FromPOI(POI))
+
+Legacy Section ID: uint16 FoldedId
+Modern: FSectionCoord { int32 X; int32 Y; } or uint32 MortonId
+
+Legacy Save Fragment (no version): { "POICount": N, ... }
+Modern Fragment: { "SchemaVersion": 2, "POIs": [...], "Fog": {...}, "Meta": {...} }
+
+================================================================
+Testing / Validation Recommendations
+================================================================
+- Unit tests: Section collision test (random grid coords -> ensure uniqueness with new scheme).
+- Perf capture: Stat unit / insights diff before & after radius optimization (target <= 25% CPU reduction in heavy reveal frame).
+- Save/Load Backward Compatibility: Load legacy save -> migrate -> re-save -> confirm round trip.
+- Multiplayer (if enabling): Two clients joining mid-session get synchronized POI + fog state within N frames.
+
+================================================================
+End of Document
+================================================================

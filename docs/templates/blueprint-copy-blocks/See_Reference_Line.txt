@@ -1,0 +1,7 @@
+See: UE Docs – <Topic> (local: epic docs/<file-or-pattern>.html)
+# Example:
+# See: UE Docs – Timelines (local: epic docs/documentation-en-us-unreal-engine-timelines-*.html)
+# Optional online link:
+# See: UE Docs – Replication Overview (https://dev.epicgames.com/documentation/en-us/unreal-engine/networking-and-multiplayer-in-unreal-engine)
+# Project index:
+# See: EpicReferences.md – <section name>

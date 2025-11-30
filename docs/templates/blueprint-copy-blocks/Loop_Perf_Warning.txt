@@ -1,0 +1,4 @@
+[Expensive] Loop/Trace Warning
+- Reason: <large array / many traces / per-frame work>
+- Guidance: cache results; throttle to timer; narrow filters
+- Alternative: <subsystem query / async task / EQS>

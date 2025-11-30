@@ -1,0 +1,5 @@
+<What it controls> (<units, range>). <When to adjust>. Default: <value>.
+Examples:
+- "Max distance for interaction (world units, 0–5000)."
+- "Time between shots (seconds, 0.02–0.5)."
+- "Damage multiplier (0–5, 1 = default)."

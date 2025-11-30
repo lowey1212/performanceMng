@@ -1,0 +1,5 @@
+<Macro Name>
+- Purpose: <one line>
+- In: <pins with units>
+- Out: <pins with units>
+- Side Effects: <replication/perf notes>

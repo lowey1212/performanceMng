@@ -1,0 +1,4 @@
+<Title> (<short purpose>)
+- In: <inputs with units>
+- Out: <outputs with units>
+- [Tags] [Authority/Client/Replicated/Async/Expensive] <optional guidance>

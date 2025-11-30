@@ -1,0 +1,11 @@
+[Init]
+- <cache components, defaults, subsystem registration>
+
+[Runtime]
+- <tick updates, timers, state machines>
+
+[Events]
+- <input bindings, overlaps, delegates>
+
+[Debug]
+- <draw debug, cvars, toggles>

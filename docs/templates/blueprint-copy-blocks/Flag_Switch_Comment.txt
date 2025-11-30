@@ -1,0 +1,5 @@
+<Flag Name>
+- Enables: <feature/behavior>
+- Use when: <case where this should be on>
+- Side Effects: <perf/network/UI impacts>
+- Default: <true/false>; EditorOnly?: <yes/no>

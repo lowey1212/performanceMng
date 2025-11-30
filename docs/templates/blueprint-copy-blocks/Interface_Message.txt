@@ -1,0 +1,5 @@
+<InterfaceName>: <MessageName>
+- Purpose: <what the message does>
+- Inputs: <Interactor Actor>, <Context>, ...
+- Returns: <result or None>
+- Notes: <who should implement and when to call>
