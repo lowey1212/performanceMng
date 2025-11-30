@@ -1,10 +1,10 @@
 # DAI Performance Manager Example Project
 
-This repository contains the **DAI Performance Manager Example Project** for Unreal Engine 5.5. It showcases the **DAI_PerfMngr** plugin in a concrete project, alongside the broader DAI (Dynamic AI) plugin ecosystem.
+This repository contains the **DAI Performance Manager Example Project** for Unreal Engine 5.5. It is designed to showcase how you would integrate and drive the **DAI_PerfMngr** plugin in a concrete project, alongside the broader DAI (Dynamic AI) plugin ecosystem.
 
 - Engine: **Unreal Engine 5.5**
 - Primary focus: **Runtime performance management, significance-based scaling, and budget-driven systems**
-- Key plugin: **DAI_PerfMngr** (Performance Manager)
+- Key plugin: **DAI_PerfMngr** (Performance Manager) — **not included in this repository**; you must provide your own licensed copy of the plugin.
 
 ## Repository Layout
 
