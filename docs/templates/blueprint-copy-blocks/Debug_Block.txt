@@ -1,5 +1,0 @@
-[Debug]
-- Toggle: <console var or keybind>
-- Draws: <what is drawn>
-- Perf: [Expensive] Use in PIE only; disable for shipping
-- Tips: <quick troubleshooting hints>

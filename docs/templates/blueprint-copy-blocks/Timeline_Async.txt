@@ -1,3 +1,0 @@
-[Async] <Name>
-- <What changes over time> over Duration (seconds)
-- Cancel if: <conditions> (e.g., actor destroyed, state changed)

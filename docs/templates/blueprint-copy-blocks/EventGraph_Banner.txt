@@ -1,5 +1,0 @@
-<Blueprint Name> — Event Graph
-- Input: <input mapping overview>
-- Systems: <Movement, Camera, Interaction, Inventory>
-- Networking: [Authority] <server responsibilities>; [Client] <cosmetic only>
-- Debug: <how to toggle or view debug>
